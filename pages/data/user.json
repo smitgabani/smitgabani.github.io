@@ -1,0 +1,29 @@
+{
+    "name":"Smit Gabani",
+    "bio": [
+       "I am Smit Gabani. I am a computer programmer student looking for co-op for the Summer 2022 term.",
+       "I am interested in web-development and building application. I am always looking for using my new learned skills to use.",
+       "I follow everything in technology, football, finance, and space exploration."
+    ],
+    "skills" : [
+       "#js",
+       "#py",
+       "#cpp"
+    ],
+    "links": {
+       "linkedin":"",
+       "github":"",
+       "codepan":"",
+       "gmail":""
+    },
+    "resume_link": "./sg_resume.pdf",
+    "coverletter_link": "./sg_cover_letter.pdf",
+    "projects": [
+       {"title": "myLibrary", "desc1": "Technologies: Angular, node, Mongo DB (user database), PostgreSQL (book database).", "desc2": "Currently working on nodemailer and Node Schedule to send email to user email about submission deadline.", "code":"https://github.com/smitgabani/myLibrary", "live":""},
+       {"title": "myStore", "desc1": "What makes this different is that myStore stores the cart as a cookie.", "desc2": "user authentication.", "code":"https://github.com/smitgabani/myStore", "live":""},
+       {"title": "REST-APIs", "desc1": "A repository which contains APIs based on REST architecture style made for learning purpose. ", "desc2": "Vanilla JS API, Typescipt MongoDB API, PostgreSQL API ", "code":"https://github.com/smitgabani/REST-APIs", "live":""},
+       {"title": "auth-auth", "desc1": "A repository based on Authentication and Authorization made for in depth understanding of the concepts", "desc2": "auth without passport.js, passport local strategy auth, jwt auth, jwt auth2", "code":"https://github.com/smitgabani/auth-auth", "live":""},
+       {"title": "python GUI programs", "desc1": "A simple encryption decryption graphical user interface using tkinter and base64", "desc2": "Notepad with tkinter", "code":"https://github.com/smitgabani/encryption-decryption-gui", "live":""}
+      ]
+
+}
