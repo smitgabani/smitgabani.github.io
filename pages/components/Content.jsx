@@ -63,7 +63,7 @@ export default function Content() {
           <Tab className="tab" label="General" {...returnTab(0)} />
           <Tab className="tab" label="Exprience" {...returnTab(1)} />
           <Tab className="tab" label="Projects" {...returnTab(2)} />
-          <Tab className="tab" label="Articles/Notes" {...returnTab(3)} />
+          <Tab className="tab" label="Articles" {...returnTab(3)} />
           <Tab className="tab" label="Github" {...returnTab(4)} />
         </Tabs>
 
