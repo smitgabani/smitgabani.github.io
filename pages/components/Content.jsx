@@ -52,7 +52,7 @@ export default function Content() {
   };
 
   return (
-    <div className={styles.content}>
+    <div className="content">
       <>
         <Tabs
           component="span"

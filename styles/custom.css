@@ -1,3 +1,23 @@
+.profile {
+  width: 24vw;
+    padding: 4vh 3vw;
+    height: 92vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    background-size: cover !important;
+    background-repeat: no-repeat;
+    position: fixed;
+    color: var(--text-color) !important;
+}
+.content {
+  width: 100%;
+  padding: 4vh 3vw;
+  height: 92vh;
+  display: inline-block;
+  padding-left: 26vw;
+}
 .articles img {
   width: 30%;
   height: auto !important;
@@ -261,7 +281,7 @@
     width: 100vw;
 }
 @media (max-width: 800px) {
-    #profile {
+    .profile {
       width: 90vw;
       padding-top: 15vh;
       padding-bottom: 4vh;
@@ -277,7 +297,7 @@
     .sidebar__inner::after {
         display: none;
     }
-    #content {
+    .content {
       width: 90vw;
       padding: 4vh 5vw;
       height: auto;
