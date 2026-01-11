@@ -1,6 +1,7 @@
 // Smit Gabani Portfolio - Main Page
 import dynamic from 'next/dynamic'
 import Head from 'next/head'
+import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import userData from './data/user.json'
 import ContactForm from '../components/ContactForm'
@@ -625,18 +626,20 @@ export default function Home() {
               {user.projects.map((project, index) => (
                 <article 
                   key={index} 
-                  className="bg-gray-800/30 rounded-2xl overflow-hidden border border-gray-800 hover:border-gray-700 transition group"
+                  className="bg-gray-800/30 rounded-2xl overflow-hidden border border-gray-800 hover:border-purple-500/50 transition group"
                   itemScope
                   itemType="https://schema.org/SoftwareSourceCode"
                 >
-                  <header className="h-32 bg-gradient-to-br from-purple-900/30 to-cyan-900/30 flex items-center justify-center p-6">
-                    <h3 className="text-2xl font-bold text-white text-center" itemProp="name">{project.title}</h3>
-                  </header>
+                  <Link href={`/projects/${project.slug}`} className="block">
+                    <header className="h-32 bg-gradient-to-br from-purple-900/30 to-cyan-900/30 flex items-center justify-center p-6 group-hover:from-purple-900/50 group-hover:to-cyan-900/50 transition">
+                      <h3 className="text-2xl font-bold text-white text-center" itemProp="name">{project.title}</h3>
+                    </header>
+                  </Link>
                   <div className="p-6">
                     <p className="text-gray-400 text-sm mb-2" itemProp="description">{project.desc1}</p>
                     <p className="text-gray-500 text-sm mb-4">{project.desc2}</p>
                     <ul className="flex flex-wrap gap-2 mb-4" aria-label={`Technologies used in ${project.title}`}>
-                      {project.tech.map((tech, techIndex) => (
+                      {project.tech.slice(0, 5).map((tech, techIndex) => (
                         <li 
                           key={techIndex}
                           className="px-3 py-1 bg-gray-700/50 rounded-full text-xs text-gray-400"
@@ -645,8 +648,21 @@ export default function Home() {
                           {tech}
                         </li>
                       ))}
+                      {project.tech.length > 5 && (
+                        <li className="px-3 py-1 bg-gray-700/50 rounded-full text-xs text-gray-500">
+                          +{project.tech.length - 5} more
+                        </li>
+                      )}
                     </ul>
                     <nav className="flex gap-4" aria-label={`Links for ${project.title}`}>
+                      <Link 
+                        href={`/projects/${project.slug}`}
+                        className="text-sm text-purple-400 hover:text-purple-300 transition flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-purple-500 rounded"
+                        aria-label={`View details for ${project.title}`}
+                      >
+                        <span>View Details</span>
+                        <span aria-hidden="true">→</span>
+                      </Link>
                       {project.code && (
                         <a 
                           href={project.code}
@@ -656,21 +672,8 @@ export default function Home() {
                           itemProp="codeRepository"
                           aria-label={`View source code for ${project.title} on GitHub (opens in new tab)`}
                         >
-                          <span>View Code</span>
-                          <span aria-hidden="true">→</span>
-                        </a>
-                      )}
-                      {project.live && (
-                        <a 
-                          href={project.live}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-purple-400 hover:text-purple-300 transition flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-purple-500 rounded"
-                          itemProp="url"
-                          aria-label={`View live demo of ${project.title} (opens in new tab)`}
-                        >
-                          <span>Live Demo</span>
-                          <span aria-hidden="true">→</span>
+                          <span>GitHub</span>
+                          <span aria-hidden="true">↗</span>
                         </a>
                       )}
                     </nav>

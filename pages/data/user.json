@@ -51,36 +51,108 @@
   ],
   "projects": [
     {
+      "slug": "fragments",
       "title": "Fragments - Cloud Microservice",
+      "subtitle": "A cloud-native microservice for processing and storing data fragments",
       "desc1": "Designed and built a cloud-native microservice for processing and storing text/image fragments with RESTful API.",
       "desc2": "Implemented full CI/CD pipeline with Docker containerization, automated testing, and ECS deployment.",
-      "tech": ["Docker", "AWS EC2", "S3", "DynamoDB", "ECS", "GitLab CI/CD", "Node.js"],
+      "description": [
+        "Fragments is a cloud-native microservice designed to handle the processing, storage, and retrieval of text and image data fragments through a RESTful API interface.",
+        "The system was architected with scalability in mind, utilizing AWS services for robust cloud infrastructure. Data is stored in DynamoDB for metadata and S3 for binary content, ensuring high availability and durability.",
+        "A comprehensive CI/CD pipeline was implemented using GitLab CI, featuring automated testing, Docker containerization, and seamless deployment to AWS ECS. This ensures consistent, reliable deployments across environments."
+      ],
+      "features": [
+        "RESTful API for CRUD operations on text and image fragments",
+        "Automatic content-type detection and conversion",
+        "AWS S3 integration for scalable blob storage",
+        "DynamoDB for fast metadata queries",
+        "Docker containerization for consistent deployments",
+        "Comprehensive test suite with Jest",
+        "GitLab CI/CD pipeline with automated deployments"
+      ],
+      "tech": ["Docker", "AWS EC2", "S3", "DynamoDB", "ECS", "GitLab CI/CD", "Node.js", "Express", "Jest"],
+      "category": "Cloud & DevOps",
       "code": "https://github.com/smitgabani/fragments",
-      "live": ""
+      "live": "",
+      "year": "2023"
     },
     {
+      "slug": "silkgenerator",
       "title": "Silkgenerator - CLI Tool",
+      "subtitle": "A powerful static site generator built with Node.js",
       "desc1": "Built a Node.js CLI static site generator with modular architecture and plugin system.",
       "desc2": "Implemented file system operations, template parsing, and automated build pipelines.",
-      "tech": ["Node.js", "CLI", "File System API", "Template Engines", "NPM"],
+      "description": [
+        "Silkgenerator is a command-line static site generator that transforms markdown and template files into optimized static HTML websites.",
+        "The tool features a modular architecture with a plugin system, allowing users to extend functionality through custom processors and transformers.",
+        "Led a team of 3 developers, implementing agile methodologies with Git, GitHub, and Jira for effective collaboration and project management."
+      ],
+      "features": [
+        "Markdown to HTML conversion with syntax highlighting",
+        "Customizable template engine support",
+        "Plugin architecture for extensibility",
+        "Hot reload during development",
+        "Automatic sitemap generation",
+        "SEO optimization features",
+        "CLI interface with intuitive commands"
+      ],
+      "tech": ["Node.js", "CLI", "File System API", "Template Engines", "NPM", "Markdown", "HTML"],
+      "category": "Developer Tools",
       "code": "https://github.com/smitgabani/silkgenerator",
-      "live": ""
+      "live": "",
+      "year": "2023"
     },
     {
+      "slug": "mylibrary",
       "title": "myLibrary - Full-Stack System",
+      "subtitle": "A comprehensive library management system with multi-database architecture",
       "desc1": "Designed multi-database architecture with MongoDB for users and PostgreSQL for transactional book data.",
       "desc2": "Implemented scheduled jobs with Node Schedule and automated email notifications via Nodemailer.",
-      "tech": ["Angular", "Node.js", "MongoDB", "PostgreSQL", "Cron Jobs"],
+      "description": [
+        "myLibrary is a full-stack library management system designed to handle book inventory, user management, and borrowing workflows.",
+        "The system employs a multi-database architecture: MongoDB handles user profiles and sessions for flexibility, while PostgreSQL manages book inventory and transactions for ACID compliance.",
+        "Automated features include scheduled reminder emails for due dates using Node Schedule and Nodemailer, ensuring users never miss a return deadline."
+      ],
+      "features": [
+        "User authentication and profile management",
+        "Book catalog with search and filtering",
+        "Borrowing and return workflow management",
+        "Automated email reminders for due dates",
+        "Admin dashboard for inventory management",
+        "Transaction history and reporting",
+        "Multi-database architecture for optimal performance"
+      ],
+      "tech": ["Angular", "Node.js", "MongoDB", "PostgreSQL", "Cron Jobs", "Nodemailer", "Express"],
+      "category": "Full-Stack",
       "code": "https://github.com/smitgabani/myLibrary",
-      "live": ""
+      "live": "",
+      "year": "2022"
     },
     {
+      "slug": "mystore",
       "title": "myStore - E-commerce Backend",
+      "subtitle": "Secure e-commerce backend with comprehensive order management",
       "desc1": "Built secure backend with session management, cart persistence, and order processing system.",
       "desc2": "Implemented RESTful API with authentication middleware and database transactions.",
-      "tech": ["Node.js", "Express", "MongoDB", "JWT", "REST API"],
+      "description": [
+        "myStore is a robust e-commerce backend system providing all the essential features for online retail operations.",
+        "The system features secure user authentication with JWT tokens, persistent shopping cart functionality, and a comprehensive order processing workflow.",
+        "Built with scalability in mind, the API follows RESTful conventions and implements proper error handling, input validation, and database transactions for data integrity."
+      ],
+      "features": [
+        "JWT-based authentication and authorization",
+        "Shopping cart with session persistence",
+        "Order processing and tracking",
+        "Product catalog management",
+        "User account management",
+        "Secure payment integration ready",
+        "RESTful API with comprehensive documentation"
+      ],
+      "tech": ["Node.js", "Express", "MongoDB", "JWT", "REST API", "Mongoose", "bcrypt"],
+      "category": "Backend",
       "code": "https://github.com/smitgabani/myStore",
-      "live": ""
+      "live": "",
+      "year": "2022"
     }
   ],
   "education": [
