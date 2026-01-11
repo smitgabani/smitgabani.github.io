@@ -176,5 +176,31 @@
       "issuer": "Amazon Web Services",
       "date": "Jan 2025"
     }
-  ]
+  ],
+  "achievements": {
+    "github": {
+      "username": "smitgabani",
+      "profileUrl": "https://github.com/smitgabani",
+      "stats": {
+        "repositories": "30+",
+        "contributions": "500+",
+        "stars": "50+",
+        "followers": "100+"
+      }
+    },
+    "stackoverflow": {
+      "userId": "19144656",
+      "profileUrl": "https://stackoverflow.com/users/19144656/smit-gabani",
+      "stats": {
+        "reputation": "500+",
+        "answers": "30+",
+        "reached": "50K+",
+        "badges": {
+          "gold": 0,
+          "silver": 5,
+          "bronze": 15
+        }
+      }
+    }
+  }
 }
