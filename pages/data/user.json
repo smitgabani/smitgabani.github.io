@@ -1,29 +1,106 @@
 {
-    "name":"Smit Gabani",
-    "bio": [
-       "I am Smit Gabani. I am a computer programmer student looking for co-op for the Summer 2022 term.",
-       "I am interested in web-development and building application. I am always looking for using my new learned skills to use.",
-       "I follow everything in technology, football, finance, and space exploration."
-    ],
-    "skills" : [
-       "#js",
-       "#py",
-       "#cpp"
-    ],
-    "links": {
-       "linkedin":"",
-       "github":"",
-       "codepan":"",
-       "gmail":""
-    },
-    "resume_link": "./sg_resume.pdf",
-    "coverletter_link": "./sg_cover_letter.pdf",
-    "projects": [
-       {"title": "myLibrary", "desc1": "Technologies: Angular, node, Mongo DB (user database), PostgreSQL (book database).", "desc2": "Currently working on nodemailer and Node Schedule to send email to user email about submission deadline.", "code":"https://github.com/smitgabani/myLibrary", "live":""},
-       {"title": "myStore", "desc1": "What makes this different is that myStore stores the cart as a cookie.", "desc2": "user authentication.", "code":"https://github.com/smitgabani/myStore", "live":""},
-       {"title": "REST-APIs", "desc1": "A repository which contains APIs based on REST architecture style made for learning purpose. ", "desc2": "Vanilla JS API, Typescipt MongoDB API, PostgreSQL API ", "code":"https://github.com/smitgabani/REST-APIs", "live":""},
-       {"title": "auth-auth", "desc1": "A repository based on Authentication and Authorization made for in depth understanding of the concepts", "desc2": "auth without passport.js, passport local strategy auth, jwt auth, jwt auth2", "code":"https://github.com/smitgabani/auth-auth", "live":""},
-       {"title": "python GUI programs", "desc1": "A simple encryption decryption graphical user interface using tkinter and base64", "desc2": "Notepad with tkinter", "code":"https://github.com/smitgabani/encryption-decryption-gui", "live":""}
+  "name": "Smit Gabani",
+  "title": "Systems Developer & Cloud Architect",
+  "location": "Toronto",
+  "email": "gabanismit11@gmail.com",
+  "phone": "+1-647-510-6678",
+  "bio": [
+    "Systems-focused developer specializing in distributed architectures, cloud infrastructure, and backend systems.",
+    "Expert in designing scalable microservices, CI/CD pipelines, and containerized deployments."
+  ],
+  "skills": {
+    "systems": ["Microservices Architecture", "Distributed Systems", "API Design", "System Integration", "Event-Driven Architecture"],
+    "languages": ["Python", "TypeScript", "JavaScript", "Java", "Go", "Bash"],
+    "backend": ["Node.js", "Express.js", "REST API", "GraphQL", "gRPC", "Message Queues"],
+    "databases": ["PostgreSQL", "MongoDB", "DynamoDB", "Redis", "Elasticsearch"],
+    "cloud": ["AWS (EC2, ECS, Lambda, S3, RDS)", "Azure", "Docker", "Kubernetes", "Terraform"],
+    "devops": ["CI/CD Pipelines", "GitHub Actions", "GitLab CI", "Jenkins", "Infrastructure as Code"],
+    "tools": ["Git", "Linux", "Nginx", "Postman", "JIRA", "Prometheus", "Grafana"]
+  },
+  "links": {
+    "linkedin": "https://linkedin.com/in/smitgabani",
+    "github": "https://github.com/smitgabani",
+    "twitter": "https://twitter.com/SmitGabani7",
+    "email": "mailto:gabanismit11@gmail.com"
+  },
+  "resume_link": "./sg_resume.pdf",
+  "coverletter_link": "./sg_cover_letter.pdf",
+  "experience": [
+    {
+      "title": "Systems Developer & Cloud Consultant",
+      "company": "Freelance",
+      "date": "Mar 2023 - Present",
+      "description": [
+        "Architected and deployed microservices-based backend systems using Docker, Kubernetes, and AWS ECS, achieving 99.9% uptime.",
+        "Designed event-driven architectures with message queues (SQS, RabbitMQ) for real-time data processing pipelines.",
+        "Implemented infrastructure-as-code using Terraform, reducing deployment time by 60% and ensuring environment consistency.",
+        "Built automated CI/CD pipelines with GitHub Actions and GitLab CI for seamless multi-environment deployments."
       ]
-
+    },
+    {
+      "title": "Backend & Infrastructure Developer",
+      "company": "Interact Health PRO, Toronto",
+      "date": "Nov 2022 - Feb 2023",
+      "description": [
+        "Developed RESTful APIs and backend services using Node.js and Express, handling 10K+ daily requests.",
+        "Configured AWS infrastructure (EC2, RDS, S3, CloudFront) achieving 30% performance improvement.",
+        "Implemented authentication and authorization systems using JWT and AWS Cognito.",
+        "Set up monitoring and alerting with CloudWatch, reducing incident response time by 40%."
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "title": "Fragments - Cloud Microservice",
+      "desc1": "Designed and built a cloud-native microservice for processing and storing text/image fragments with RESTful API.",
+      "desc2": "Implemented full CI/CD pipeline with Docker containerization, automated testing, and ECS deployment.",
+      "tech": ["Docker", "AWS EC2", "S3", "DynamoDB", "ECS", "GitLab CI/CD", "Node.js"],
+      "code": "https://github.com/smitgabani/fragments",
+      "live": ""
+    },
+    {
+      "title": "Silkgenerator - CLI Tool",
+      "desc1": "Built a Node.js CLI static site generator with modular architecture and plugin system.",
+      "desc2": "Implemented file system operations, template parsing, and automated build pipelines.",
+      "tech": ["Node.js", "CLI", "File System API", "Template Engines", "NPM"],
+      "code": "https://github.com/smitgabani/silkgenerator",
+      "live": ""
+    },
+    {
+      "title": "myLibrary - Full-Stack System",
+      "desc1": "Designed multi-database architecture with MongoDB for users and PostgreSQL for transactional book data.",
+      "desc2": "Implemented scheduled jobs with Node Schedule and automated email notifications via Nodemailer.",
+      "tech": ["Angular", "Node.js", "MongoDB", "PostgreSQL", "Cron Jobs"],
+      "code": "https://github.com/smitgabani/myLibrary",
+      "live": ""
+    },
+    {
+      "title": "myStore - E-commerce Backend",
+      "desc1": "Built secure backend with session management, cart persistence, and order processing system.",
+      "desc2": "Implemented RESTful API with authentication middleware and database transactions.",
+      "tech": ["Node.js", "Express", "MongoDB", "JWT", "REST API"],
+      "code": "https://github.com/smitgabani/myStore",
+      "live": ""
+    }
+  ],
+  "education": [
+    {
+      "degree": "Advanced Diploma, Computer Programming and Analysis",
+      "institution": "Seneca College",
+      "date": "Sept 2020 - Apr 2023",
+      "courses": ["Data Structures & Algorithms", "System Design", "Database Architecture", "Operating Systems", "Network Programming"]
+    }
+  ],
+  "certifications": [
+    {
+      "name": "AWS Certified Cloud Practitioner",
+      "issuer": "Amazon Web Services",
+      "date": "Aug 2023"
+    },
+    {
+      "name": "AWS Certified Cloud Developer",
+      "issuer": "Amazon Web Services",
+      "date": "Jan 2025"
+    }
+  ]
 }
