@@ -403,16 +403,6 @@ export default function Home() {
               >
                 Contact Me
               </button>
-              <a 
-                href={user.resume_link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-8 py-3 border border-purple-600 hover:bg-purple-600/20 text-purple-400 rounded-lg font-medium transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-950"
-                aria-label="Download my resume (opens in new tab)"
-                title="Download Resume PDF"
-              >
-                Resume
-              </a>
             </nav>
           </div>
         </section>
