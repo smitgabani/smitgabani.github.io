@@ -6,46 +6,90 @@
   
   <!-- Homepage -->
   <url>
-    <loc>https://smitgabani.com/</loc>
+    <loc>https://smitgabani.github.io/</loc>
     <lastmod>2026-01-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   
-  <!-- Section anchors for better indexing -->
+  <!-- Blog -->
   <url>
-    <loc>https://smitgabani.com/#about</loc>
+    <loc>https://smitgabani.github.io/blog</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Project Pages -->
+  <url>
+    <loc>https://smitgabani.github.io/projects/fragments</loc>
     <lastmod>2026-01-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   
   <url>
-    <loc>https://smitgabani.com/#skills</loc>
+    <loc>https://smitgabani.github.io/projects/silkgenerator</loc>
     <lastmod>2026-01-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   
   <url>
-    <loc>https://smitgabani.com/#experience</loc>
+    <loc>https://smitgabani.github.io/projects/mylibrary</loc>
     <lastmod>2026-01-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   
   <url>
-    <loc>https://smitgabani.com/#projects</loc>
+    <loc>https://smitgabani.github.io/projects/mystore</loc>
     <lastmod>2026-01-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   
+  <!-- Section anchors -->
   <url>
-    <loc>https://smitgabani.com/#contact</loc>
+    <loc>https://smitgabani.github.io/#about</loc>
     <lastmod>2026-01-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://smitgabani.github.io/#skills</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://smitgabani.github.io/#achievements</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://smitgabani.github.io/#experience</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://smitgabani.github.io/#projects</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://smitgabani.github.io/#contact</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   
 </urlset>
