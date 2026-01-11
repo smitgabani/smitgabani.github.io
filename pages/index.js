@@ -83,21 +83,11 @@ export default function Home() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // SEO: Generate keywords from skills
+  // SEO: Generate skills list for description
   const allSkills = Object.values(user.skills).flat();
-  const keywords = [
-    user.name,
-    user.title,
-    "Systems Developer",
-    "Cloud Architect",
-    "DevOps Engineer",
-    "Backend Developer",
-    user.location,
-    ...allSkills.slice(0, 20),
-  ].join(", ");
 
-  // SEO: Canonical URL (update this to your actual domain)
-  const siteUrl = "https://smitgabani.com";
+  // SEO: Canonical URL
+  const siteUrl = "https://smitgabani.github.io";
   const canonicalUrl = siteUrl;
 
   // SEO: Structured Data (JSON-LD) for Person
@@ -213,16 +203,13 @@ export default function Home() {
           name="google-site-verification"
           content="5btffQ_j0ZyetQfVnTfJ0HtTRQXYxj3fwJFJTkpSOz8"
         />
-        <title>
-          {user.name} | {user.title} | Toronto, Canada
-        </title>
+        <title>Smit Gabani - Systems Developer &amp; Cloud Architect | Toronto, Canada</title>
         <meta
           name="description"
           content={`${user.bio[0]} ${user.bio[1]} Based in ${
             user.location
           }. Specializing in ${allSkills.slice(0, 5).join(", ")}.`}
         />
-        <meta name="keywords" content={keywords} />
         <meta name="author" content={user.name} />
         <meta
           name="robots"
@@ -235,7 +222,7 @@ export default function Home() {
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content={`${user.name} Portfolio`} />
         <meta property="og:title" content={`${user.name} - ${user.title}`} />
-        <meta property="og:description" content={user.bio[0]} />
+        <meta property="og:description" content={`${user.bio[0]} ${user.bio[1]}`} />
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:image" content={`${siteUrl}/smitgabani.jpg`} />
         <meta
@@ -251,7 +238,7 @@ export default function Home() {
         <meta name="twitter:site" content="@SmitGabani7" />
         <meta name="twitter:creator" content="@SmitGabani7" />
         <meta name="twitter:title" content={`${user.name} - ${user.title}`} />
-        <meta name="twitter:description" content={user.bio[0]} />
+        <meta name="twitter:description" content={`${user.bio[0]} ${user.bio[1]}`} />
         <meta name="twitter:image" content={`${siteUrl}/smitgabani.jpg`} />
         <meta
           name="twitter:image:alt"

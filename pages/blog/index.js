@@ -102,21 +102,73 @@ function getReadTime(description) {
 }
 
 export default function Blog({ posts, totalPosts, mediumUsername, user }) {
+  const siteUrl = "https://smitgabani.github.io";
+  const canonicalUrl = `${siteUrl}/blog`;
+
+  // Structured Data for Blog Collection
+  const blogSchema = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    name: `${user.name} Technical Blog`,
+    description: "Articles about cloud architecture, DevOps, systems development, and software engineering best practices",
+    url: canonicalUrl,
+    author: {
+      "@type": "Person",
+      name: user.name
+    },
+    publisher: {
+      "@type": "Person",
+      name: user.name,
+      url: siteUrl
+    }
+  };
+
+  // Generate ItemList structured data for blog posts
+  const blogPostListSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: posts.map((post, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      url: post.link,
+      name: post.title
+    }))
+  };
+
   return (
     <>
       <Head>
-        <title>Blog | {user.name}</title>
-        <meta name="description" content={`Technical blog by ${user.name} - ${user.title}. Articles about cloud architecture, DevOps, and systems development.`} />
-        
+        <title>Blog | Smit Gabani - Technical Articles on Cloud &amp; DevOps</title>
+        <meta name="description" content={`Technical blog by ${user.name} - ${user.title}. Articles about cloud architecture, DevOps, systems development, and software engineering best practices.`} />
+        <meta name="author" content={user.name} />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        <link rel="canonical" href={canonicalUrl} />
+
         {/* Open Graph */}
+        <meta property="og:type" content="website" />
         <meta property="og:title" content={`Blog | ${user.name}`} />
         <meta property="og:description" content={`Technical articles by ${user.name} on cloud architecture, DevOps, and systems development.`} />
-        <meta property="og:type" content="blog" />
-        
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:image" content={`${siteUrl}/smitgabani.jpg`} />
+        <meta property="og:locale" content="en_CA" />
+
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@SmitGabani7" />
+        <meta name="twitter:creator" content="@SmitGabani7" />
         <meta name="twitter:title" content={`Blog | ${user.name}`} />
-        <meta name="twitter:description" content={`Technical articles by ${user.name}`} />
+        <meta name="twitter:description" content={`Technical articles by ${user.name} on cloud architecture, DevOps, and systems development.`} />
+        <meta name="twitter:image" content={`${siteUrl}/smitgabani.jpg`} />
+
+        {/* Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(blogSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostListSchema) }}
+        />
       </Head>
 
       <div className="min-h-screen bg-gray-950">

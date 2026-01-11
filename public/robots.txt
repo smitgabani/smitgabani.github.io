@@ -1,11 +1,11 @@
 # Robots.txt for Smit Gabani Portfolio
-# https://smitgabani.com
+# https://smitgabani.github.io
 
 User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://smitgabani.com/sitemap.xml
+Sitemap: https://smitgabani.github.io/sitemap.xml
 
 # Crawl-delay for polite crawling
 Crawl-delay: 1

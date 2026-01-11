@@ -33,7 +33,8 @@ export async function getStaticProps({ params }) {
 
 export default function ProjectPage({ project, prevProject, nextProject, user }) {
   const siteUrl = 'https://smitgabani.github.io'
-  
+  const canonicalUrl = `${siteUrl}/projects/${project.slug}`
+
   // Category colors
   const categoryColors = {
     'Cloud & DevOps': 'from-blue-500 to-cyan-500',
@@ -41,28 +42,37 @@ export default function ProjectPage({ project, prevProject, nextProject, user })
     'Full-Stack': 'from-purple-500 to-pink-500',
     'Backend': 'from-orange-500 to-red-500',
   }
-  
+
   const gradientColor = categoryColors[project.category] || 'from-purple-500 to-cyan-500'
+
+  // Construct title for SEO
+  const pageTitle = `${project.title} - ${project.category} | Smit Gabani`
 
   return (
     <>
       <Head>
-        <title>{project.title} | {user.name}</title>
-        <meta name="description" content={project.desc1} />
-        <meta name="keywords" content={project.tech.join(', ')} />
-        
+        <title>{pageTitle}</title>
+        <meta name="description" content={`${project.desc1} ${project.desc2}`} />
+        <meta name="author" content={user.name} />
+        <meta name="robots" content="index, follow, max-image-preview:large" />
+
         {/* Open Graph */}
+        <meta property="og:type" content="article" />
         <meta property="og:title" content={`${project.title} | ${user.name}`} />
         <meta property="og:description" content={project.desc1} />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={`${siteUrl}/projects/${project.slug}`} />
-        
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:image" content={`${siteUrl}/smitgabani.jpg`} />
+        <meta property="og:locale" content="en_CA" />
+
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@SmitGabani7" />
+        <meta name="twitter:creator" content="@SmitGabani7" />
         <meta name="twitter:title" content={`${project.title} | ${user.name}`} />
         <meta name="twitter:description" content={project.desc1} />
-        
-        <link rel="canonical" href={`${siteUrl}/projects/${project.slug}`} />
+        <meta name="twitter:image" content={`${siteUrl}/smitgabani.jpg`} />
+
+        <link rel="canonical" href={canonicalUrl} />
         
         {/* Structured Data */}
         <script
