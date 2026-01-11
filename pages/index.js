@@ -305,6 +305,15 @@ export default function Home() {
                 <li role="none"><a href="#experience" role="menuitem" className="text-gray-300 hover:text-white transition">Experience</a></li>
                 <li role="none"><a href="#projects" role="menuitem" className="text-gray-300 hover:text-white transition">Projects</a></li>
                 <li role="none"><a href="#contact" role="menuitem" className="text-gray-300 hover:text-white transition">Contact</a></li>
+                <li role="none">
+                  <Link 
+                    href="/blog" 
+                    role="menuitem" 
+                    className="text-gray-300 hover:text-white transition"
+                  >
+                    ✍️ Blog
+                  </Link>
+                </li>
               </ul>
             </div>
           </nav>
@@ -783,6 +792,14 @@ export default function Home() {
                   <li><a href="#skills" className="hover:text-white transition focus:outline-none focus:text-white">Skills</a></li>
                   <li><a href="#experience" className="hover:text-white transition focus:outline-none focus:text-white">Experience</a></li>
                   <li><a href="#projects" className="hover:text-white transition focus:outline-none focus:text-white">Projects</a></li>
+                  <li className="pt-2">
+                    <Link 
+                      href="/blog" 
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30 text-purple-400 rounded-full text-sm hover:from-purple-500/30 hover:to-cyan-500/30 hover:text-purple-300 transition focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    >
+                      ✍️ Blog
+                    </Link>
+                  </li>
                 </ul>
               </nav>
               

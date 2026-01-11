@@ -1,8 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 
 export default function ContactForm() {
+  const router = useRouter();
   const [result, setResult] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
+
+  // Pre-fill message if coming from a project page
+  useEffect(() => {
+    if (router.query.project) {
+      setMessage(`Hi! I'm interested in discussing the "${router.query.project}" project. `);
+    }
+  }, [router.query.project]);
 
   const onSubmit = async (event) => {
     event.preventDefault();
@@ -22,6 +32,7 @@ export default function ContactForm() {
       
       if (data.success) {
         setResult("success");
+        setMessage("");
         event.target.reset();
       } else {
         setResult("error");
@@ -95,6 +106,8 @@ export default function ContactForm() {
           name="message" 
           required
           rows={6}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
           placeholder="Got a wild idea? Need a tech wizard? Want to build something awesome together? Or just wanna say hi? Spill it all here... ☕"
           className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition resize-none"
           aria-required="true"

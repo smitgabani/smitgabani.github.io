@@ -230,7 +230,7 @@ export default function ProjectPage({ project, prevProject, nextProject, user })
                   </a>
                 )}
                 <Link 
-                  href="/#contact"
+                  href={`/?project=${encodeURIComponent(project.title)}#contact`}
                   className="flex items-center gap-2 px-6 py-3 border border-gray-600 text-white rounded-lg font-medium hover:bg-gray-800 transition"
                 >
                   Get in Touch

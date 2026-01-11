@@ -53,24 +53,26 @@
     {
       "slug": "fragments",
       "title": "Fragments - Cloud Microservice",
-      "subtitle": "A cloud-native microservice for processing and storing data fragments",
-      "desc1": "Designed and built a cloud-native microservice for processing and storing text/image fragments with RESTful API.",
-      "desc2": "Implemented full CI/CD pipeline with Docker containerization, automated testing, and ECS deployment.",
+      "subtitle": "A highly scalable cloud-based microservice for storing and converting text and image fragments",
+      "desc1": "Built a cloud-native microservice for an automotive company to handle text/image fragments from IoT devices, mobile apps, and automated cameras.",
+      "desc2": "Implemented RESTful API with format conversion, AWS deployment, and full CI/CD pipeline using Docker and ECS.",
       "description": [
-        "Fragments is a cloud-native microservice designed to handle the processing, storage, and retrieval of text and image data fragments through a RESTful API interface.",
-        "The system was architected with scalability in mind, utilizing AWS services for robust cloud infrastructure. Data is stored in DynamoDB for metadata and S3 for binary content, ensuring high availability and durability.",
-        "A comprehensive CI/CD pipeline was implemented using GitLab CI, featuring automated testing, Docker containerization, and seamless deployment to AWS ECS. This ensures consistent, reliable deployments across environments."
+        "Fragments is a cloud-based microservice developed for a fictional Canadian automotive company that needed to connect, digitize, and automate their internal systems. The company identified a critical gap: many sub-systems needed to work with small fragments of text and images that were smaller than traditional documents and used various formats.",
+        "The system solves real business problems: IoT devices on manufacturing floors produce reports in plain text, CSV, and JSON formats. Factory workers use mobile apps to write status updates that need to be saved as JSON, Markdown, Text, or HTML. Automated cameras on assembly lines capture images of damaged parts for audit purposes.",
+        "The microservice provides a highly scalable HTTP REST API that seamlessly integrates with existing systems, uses the company's authorization infrastructure, and deploys to AWS. It supports text formats (plain text, Markdown, HTML, JSON) and image formats (PNG, JPEG, WebP, GIF) with automatic format conversion capabilities.",
+        "A key feature is the ability to convert fragments between different formats on retrieval—for example, Markdown to HTML or JPEG to PNG—without increasing storage costs since only the original version is stored. All data is isolated per user with proper authorization."
       ],
       "features": [
-        "RESTful API for CRUD operations on text and image fragments",
-        "Automatic content-type detection and conversion",
-        "AWS S3 integration for scalable blob storage",
-        "DynamoDB for fast metadata queries",
-        "Docker containerization for consistent deployments",
-        "Comprehensive test suite with Jest",
-        "GitLab CI/CD pipeline with automated deployments"
+        "HTTP REST API for CRUD operations on text and image fragments",
+        "Support for multiple text formats: plain text, Markdown, HTML, JSON, CSV",
+        "Support for image formats: PNG, JPEG, WebP, GIF",
+        "Automatic format conversion on retrieval (e.g., Markdown → HTML, JPEG → PNG)",
+        "AWS S3 for scalable blob storage, DynamoDB for metadata",
+        "User isolation and authorization for all operations",
+        "Docker containerization with automated CI/CD to AWS ECS",
+        "Comprehensive test suite with Jest for reliability"
       ],
-      "tech": ["Docker", "AWS EC2", "S3", "DynamoDB", "ECS", "GitLab CI/CD", "Node.js", "Express", "Jest"],
+      "tech": ["Docker", "AWS EC2", "S3", "DynamoDB", "ECS", "GitLab CI/CD", "Node.js", "Express", "Jest", "REST API"],
       "category": "Cloud & DevOps",
       "code": "https://github.com/smitgabani/fragments",
       "live": "",
