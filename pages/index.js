@@ -5,6 +5,10 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import userData from "./data/user.json";
 import ContactForm from "../components/ContactForm";
+import ThemeToggle from "../components/ThemeToggle";
+import ProjectFilter from "../components/ProjectFilter";
+import ScrollProgress from "../components/ScrollProgress";
+import { trackButtonClick, trackDownload, trackExternalLink } from "../components/Analytics";
 
 // Dynamic import to avoid SSR issues with Three.js
 const Logo3DProvider = dynamic(
@@ -24,6 +28,7 @@ export default function Home() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [orbitMode, setOrbitMode] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [filteredProjects, setFilteredProjects] = useState(user.projects);
 
   // Detect mobile device
   useEffect(() => {
@@ -275,6 +280,12 @@ export default function Home() {
       </Head>
 
       <Logo3DProvider>
+        {/* Theme Toggle */}
+        <ThemeToggle />
+
+        {/* Scroll Progress Indicator */}
+        <ScrollProgress />
+
         {/* SEO: Main wrapper with semantic structure */}
         <div
           className="min-h-screen bg-gray-950"
@@ -485,14 +496,20 @@ export default function Home() {
                   aria-label="Primary actions"
                 >
                   <button
-                    onClick={() => smoothScrollTo("projects", 2500)}
+                    onClick={() => {
+                      smoothScrollTo("projects", 2500);
+                      trackButtonClick("View Projects", "Hero Section");
+                    }}
                     className="px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-950"
                     aria-label="View my projects"
                   >
                     View Projects
                   </button>
                   <button
-                    onClick={() => smoothScrollTo("contact", 2500)}
+                    onClick={() => {
+                      smoothScrollTo("contact", 2500);
+                      trackButtonClick("Contact Me", "Hero Section");
+                    }}
                     className="px-8 py-3 border border-gray-600 hover:border-gray-500 text-white rounded-lg font-medium transition focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-950"
                     aria-label="Contact me"
                   >
@@ -1028,12 +1045,18 @@ export default function Home() {
                   <p className="text-gray-400">Some of my technical work</p>
                 </header>
 
+                {/* Project Filter */}
+                <ProjectFilter
+                  projects={user.projects}
+                  onFilterChange={setFilteredProjects}
+                />
+
                 <div
                   className="grid md:grid-cols-2 gap-8"
                   role="feed"
                   aria-label="Portfolio projects"
                 >
-                  {user.projects.map((project, index) => (
+                  {filteredProjects.map((project, index) => (
                     <article
                       key={index}
                       className="bg-gray-800/30 rounded-2xl overflow-hidden border border-gray-800 hover:border-purple-500/50 transition group"
@@ -1152,6 +1175,7 @@ export default function Home() {
                         href={user.resume_link}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => trackDownload("resume.pdf")}
                         className="px-8 py-4 border border-white text-white rounded-lg font-bold hover:bg-white/10 transition focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-950"
                         aria-label="Download my resume as PDF (opens in new tab)"
                         download

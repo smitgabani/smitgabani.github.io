@@ -18,6 +18,9 @@ function MyApp({ Component, pageProps }) {
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico" />
 
+        {/* PWA Manifest */}
+        <link rel="manifest" href="/manifest.json" />
+
         {/* Theme Color for browsers */}
         <meta name="theme-color" content="#030712" />
         <meta name="msapplication-TileColor" content="#030712" />
