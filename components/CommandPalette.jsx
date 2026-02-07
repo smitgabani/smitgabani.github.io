@@ -187,21 +187,31 @@ export default function CommandPalette({ projects = [], socialLinks = {} }) {
               heading="Projects"
               className="px-2 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider"
             >
-              {projects.slice(0, 5).map((project, index) => (
-                <CommandItem
-                  key={project.id || index}
-                  onSelect={() => handleSelect(() => {
-                    if (project.link) {
-                      openLink(project.link, `Open ${project.title}`);
-                    } else {
-                      scrollToSection('projects');
-                    }
-                  })}
-                  icon="📁"
-                  label={project.title}
-                  description={project.description?.substring(0, 50) + '...'}
-                />
-              ))}
+              {projects.slice(0, 5).map((project, index) => {
+                // Handle description as either string or array
+                let desc = '';
+                if (typeof project.description === 'string') {
+                  desc = project.description.substring(0, 50) + '...';
+                } else if (Array.isArray(project.description) && project.description.length > 0) {
+                  desc = project.description[0].substring(0, 50) + '...';
+                }
+
+                return (
+                  <CommandItem
+                    key={project.id || index}
+                    onSelect={() => handleSelect(() => {
+                      if (project.link) {
+                        openLink(project.link, `Open ${project.title}`);
+                      } else {
+                        scrollToSection('projects');
+                      }
+                    })}
+                    icon="📁"
+                    label={project.title}
+                    description={desc}
+                  />
+                );
+              })}
             </Command.Group>
           )}
 

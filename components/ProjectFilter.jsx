@@ -22,9 +22,17 @@ export default function ProjectFilter({ projects, onFilterChange }) {
       const matchesTech = selectedTech === 'all' ||
         (project.tech_stack && project.tech_stack.includes(selectedTech));
 
+      // Handle description as either string or array
+      let descriptionText = '';
+      if (typeof project.description === 'string') {
+        descriptionText = project.description;
+      } else if (Array.isArray(project.description)) {
+        descriptionText = project.description.join(' ');
+      }
+
       const matchesSearch = !searchQuery ||
-        project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        project.description.toLowerCase().includes(searchQuery.toLowerCase());
+        (project.title && project.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        descriptionText.toLowerCase().includes(searchQuery.toLowerCase());
 
       return matchesTech && matchesSearch;
     });
