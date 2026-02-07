@@ -4,7 +4,8 @@ const nextConfig = {
   output: "export",
   trailingSlash: true,
   images: {
-    unoptimized: true,
+    loader: 'custom',
+    loaderFile: './imageLoader.js',
   },
   // Exclude archive folder from page generation
   pageExtensions: ["js", "jsx", "mdx"],

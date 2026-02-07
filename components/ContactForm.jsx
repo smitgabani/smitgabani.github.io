@@ -6,6 +6,7 @@ export default function ContactForm() {
   const [result, setResult] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
+  const [errors, setErrors] = useState({});
 
   // Pre-fill message if coming from a project page
   useEffect(() => {
@@ -14,12 +15,44 @@ export default function ContactForm() {
     }
   }, [router.query.project]);
 
+  // Validation function
+  const validateForm = (formData) => {
+    const newErrors = {};
+    const name = formData.get('name');
+    const email = formData.get('email');
+    const message = formData.get('message');
+
+    if (!name || name.trim().length < 2) {
+      newErrors.name = 'Name must be at least 2 characters';
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    if (!message || message.trim().length < 10) {
+      newErrors.message = 'Message must be at least 10 characters';
+    }
+
+    return newErrors;
+  };
+
   const onSubmit = async (event) => {
     event.preventDefault();
-    setIsSubmitting(true);
+    setErrors({});
     setResult("");
-    
+
     const formData = new FormData(event.target);
+
+    // Validate form
+    const validationErrors = validateForm(formData);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
+    setIsSubmitting(true);
     formData.append("access_key", "d3a970d5-b7ae-4a6c-ba50-b9de6f52bc1d");
 
     try {
@@ -29,11 +62,13 @@ export default function ContactForm() {
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         setResult("success");
         setMessage("");
         event.target.reset();
+        // Auto-hide success message after 5 seconds
+        setTimeout(() => setResult(""), 5000);
       } else {
         setResult("error");
       }
@@ -55,63 +90,82 @@ export default function ContactForm() {
       
       {/* Name Field */}
       <div>
-        <label 
-          htmlFor="contact-name" 
+        <label
+          htmlFor="contact-name"
           className="block text-sm font-medium text-gray-300 mb-2"
         >
           Name <span className="text-red-400">*</span>
         </label>
-        <input 
-          type="text" 
+        <input
+          type="text"
           id="contact-name"
-          name="name" 
+          name="name"
           required
           autoComplete="name"
           placeholder="Your name"
-          className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+          className={`w-full px-4 py-3 bg-gray-800/50 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition ${
+            errors.name ? 'border-red-500' : 'border-gray-700'
+          }`}
           aria-required="true"
+          aria-invalid={errors.name ? 'true' : 'false'}
         />
+        {errors.name && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.name}</p>
+        )}
       </div>
       
       {/* Email Field */}
       <div>
-        <label 
-          htmlFor="contact-email" 
+        <label
+          htmlFor="contact-email"
           className="block text-sm font-medium text-gray-300 mb-2"
         >
           Email <span className="text-red-400">*</span>
         </label>
-        <input 
-          type="email" 
+        <input
+          type="email"
           id="contact-email"
-          name="email" 
+          name="email"
           required
           autoComplete="email"
           placeholder="your.email@example.com"
-          className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+          className={`w-full px-4 py-3 bg-gray-800/50 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition ${
+            errors.email ? 'border-red-500' : 'border-gray-700'
+          }`}
           aria-required="true"
+          aria-invalid={errors.email ? 'true' : 'false'}
         />
+        {errors.email && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.email}</p>
+        )}
       </div>
       
       {/* What's on your mind - Single creative field */}
       <div>
-        <label 
-          htmlFor="contact-thoughts" 
+        <label
+          htmlFor="contact-thoughts"
           className="block text-sm font-medium text-gray-300 mb-2"
         >
           What's brewing in your mind? <span className="text-red-400">*</span>
         </label>
-        <textarea 
+        <textarea
           id="contact-thoughts"
-          name="message" 
+          name="message"
           required
           rows={6}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Got a wild idea? Need a tech wizard? Want to build something awesome together? Or just wanna say hi? Spill it all here... ☕"
-          className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition resize-none"
+          className={`w-full px-4 py-3 bg-gray-800/50 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition resize-none ${
+            errors.message ? 'border-red-500' : 'border-gray-700'
+          }`}
           aria-required="true"
+          aria-invalid={errors.message ? 'true' : 'false'}
         />
+        {errors.message && (
+          <p className="mt-1 text-sm text-red-400" role="alert">{errors.message}</p>
+        )}
+        <p className="mt-1 text-xs text-gray-500">{message.length} characters</p>
       </div>
       
       {/* Submit Button */}
