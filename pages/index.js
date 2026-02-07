@@ -7,6 +7,7 @@ import userData from "./data/user.json";
 import ContactForm from "../components/ContactForm";
 import ProjectFilter from "../components/ProjectFilter";
 import ScrollProgress from "../components/ScrollProgress";
+import CommandPalette from "../components/CommandPalette";
 import { trackButtonClick, trackDownload, trackExternalLink } from "../components/Analytics";
 
 // Dynamic import to avoid SSR issues with Three.js
@@ -21,8 +22,22 @@ const Logo3DView = dynamic(
 // Standalone Logo3D for elements that need their own z-index layer (like navbar)
 const Logo3D = dynamic(() => import("../components/Logo3D"), { ssr: false });
 
-export default function Home() {
-  const user = userData;
+export default function Home({ githubStats, stackoverflowStats }) {
+  // Merge live stats with user data
+  const user = {
+    ...userData,
+    achievements: {
+      ...userData.achievements,
+      github: {
+        ...userData.achievements?.github,
+        stats: githubStats || userData.achievements?.github?.stats,
+      },
+      stackoverflow: {
+        ...userData.achievements?.stackoverflow,
+        stats: stackoverflowStats || userData.achievements?.stackoverflow?.stats,
+      },
+    },
+  };
   const [showNavbar, setShowNavbar] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [orbitMode, setOrbitMode] = useState(false);
@@ -281,6 +296,9 @@ export default function Home() {
       <Logo3DProvider>
         {/* Scroll Progress Indicator */}
         <ScrollProgress />
+
+        {/* Command Palette - Press CMD+K or CTRL+K */}
+        <CommandPalette projects={user.projects} socialLinks={user.links} />
 
         {/* SEO: Main wrapper with semantic structure */}
         <div
@@ -1428,4 +1446,56 @@ export default function Home() {
       </Logo3DProvider>
     </>
   );
+}
+
+// Fetch live GitHub and StackOverflow stats at build time
+export async function getStaticProps() {
+  const { fetchGitHubStats, formatStat: formatGitHubStat } = await import('../lib/api/github');
+  const { fetchStackOverflowStats, formatStat: formatStackOverflowStat, formatReach } = await import('../lib/api/stackoverflow');
+
+  try {
+    // Fetch GitHub stats
+    const githubData = await fetchGitHubStats('smitgabani');
+
+    // Fetch StackOverflow stats
+    const stackoverflowData = await fetchStackOverflowStats('19144656');
+
+    // Format stats for display
+    const githubStats = {
+      repositories: formatGitHubStat(githubData.repositories),
+      contributions: formatGitHubStat(githubData.contributions),
+      stars: formatGitHubStat(githubData.stars),
+      followers: formatGitHubStat(githubData.followers),
+    };
+
+    const stackoverflowStats = {
+      reputation: formatStackOverflowStat(stackoverflowData.reputation),
+      answers: formatStackOverflowStat(stackoverflowData.answers),
+      reached: formatReach(stackoverflowData.reached),
+      badges: {
+        gold: stackoverflowData.badges.gold,
+        silver: stackoverflowData.badges.silver,
+        bronze: stackoverflowData.badges.bronze,
+      },
+    };
+
+    return {
+      props: {
+        githubStats,
+        stackoverflowStats,
+      },
+      // Note: revalidate not supported with static export
+      // Stats are fetched at build time only
+    };
+  } catch (error) {
+    console.error('Error fetching stats in getStaticProps:', error);
+
+    // Return null props to use fallback data from user.json
+    return {
+      props: {
+        githubStats: null,
+        stackoverflowStats: null,
+      },
+    };
+  }
 }

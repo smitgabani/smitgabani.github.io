@@ -1,8 +1,18 @@
 import Head from "next/head";
+import { useEffect } from "react";
+import { Toaster } from "react-hot-toast";
 import "../styles/globals.css";
 import Analytics from "../components/Analytics";
+import { registerServiceWorker } from "../lib/utils/serviceWorker";
 
 function MyApp({ Component, pageProps }) {
+  // Register service worker on mount
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production') {
+      registerServiceWorker();
+    }
+  }, []);
+
   return (
     <>
       <Head>
@@ -49,6 +59,29 @@ function MyApp({ Component, pageProps }) {
         />
       </Head>
       <Analytics gaId="G-PGHBTZGRC6" />
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#1f2937',
+            color: '#fff',
+            border: '1px solid #374151',
+          },
+          success: {
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
       <Component {...pageProps} />
     </>
   );
