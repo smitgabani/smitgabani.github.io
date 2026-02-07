@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import userData from "./data/user.json";
 import ContactForm from "../components/ContactForm";
-import ThemeToggle from "../components/ThemeToggle";
 import ProjectFilter from "../components/ProjectFilter";
 import ScrollProgress from "../components/ScrollProgress";
 import { trackButtonClick, trackDownload, trackExternalLink } from "../components/Analytics";
@@ -280,9 +279,6 @@ export default function Home() {
       </Head>
 
       <Logo3DProvider>
-        {/* Theme Toggle */}
-        <ThemeToggle />
-
         {/* Scroll Progress Indicator */}
         <ScrollProgress />
 
