@@ -54,7 +54,9 @@ export default function ProjectPage({ project, prevProject, nextProject, user })
         <meta property="og:title" content={`${project.title} | ${user.name}`} />
         <meta property="og:description" content={project.desc1} />
         <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:image" content={`${siteUrl}/smitgabani.jpg`} />
+        <meta property="og:image" content={`${siteUrl}/og-image.jpg`} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:locale" content="en_CA" />
 
         {/* Twitter */}
@@ -63,7 +65,7 @@ export default function ProjectPage({ project, prevProject, nextProject, user })
         <meta name="twitter:creator" content="@SmitGabani7" />
         <meta name="twitter:title" content={`${project.title} | ${user.name}`} />
         <meta name="twitter:description" content={project.desc1} />
-        <meta name="twitter:image" content={`${siteUrl}/smitgabani.jpg`} />
+        <meta name="twitter:image" content={`${siteUrl}/og-image.jpg`} />
 
         <link rel="canonical" href={canonicalUrl} />
         

@@ -217,7 +217,7 @@ export default function Home({ githubStats, stackoverflowStats }) {
         <meta property="og:title" content={`${user.name} - ${user.title}`} />
         <meta property="og:description" content={`${user.bio[0]} ${user.bio[1]}`} />
         <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:image" content={`${siteUrl}/smitgabani.jpg`} />
+        <meta property="og:image" content={`${siteUrl}/og-image.jpg`} />
         <meta
           property="og:image:alt"
           content={`${user.name} - ${user.title}`}
@@ -232,7 +232,7 @@ export default function Home({ githubStats, stackoverflowStats }) {
         <meta name="twitter:creator" content="@SmitGabani7" />
         <meta name="twitter:title" content={`${user.name} - ${user.title}`} />
         <meta name="twitter:description" content={`${user.bio[0]} ${user.bio[1]}`} />
-        <meta name="twitter:image" content={`${siteUrl}/smitgabani.jpg`} />
+        <meta name="twitter:image" content={`${siteUrl}/og-image.jpg`} />
         <meta
           name="twitter:image:alt"
           content={`${user.name} - ${user.title}`}

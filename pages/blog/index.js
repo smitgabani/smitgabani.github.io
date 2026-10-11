@@ -179,7 +179,9 @@ export default function Blog({ posts, totalPosts, mediumUsername, user }) {
         <meta property="og:title" content={`Blog | ${user.name}`} />
         <meta property="og:description" content={`Technical articles by ${user.name} on cloud architecture, DevOps, and systems development.`} />
         <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:image" content={`${siteUrl}/smitgabani.jpg`} />
+        <meta property="og:image" content={`${siteUrl}/og-image.jpg`} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:locale" content="en_CA" />
 
         {/* Twitter */}
@@ -188,7 +190,7 @@ export default function Blog({ posts, totalPosts, mediumUsername, user }) {
         <meta name="twitter:creator" content="@SmitGabani7" />
         <meta name="twitter:title" content={`Blog | ${user.name}`} />
         <meta name="twitter:description" content={`Technical articles by ${user.name} on cloud architecture, DevOps, and systems development.`} />
-        <meta name="twitter:image" content={`${siteUrl}/smitgabani.jpg`} />
+        <meta name="twitter:image" content={`${siteUrl}/og-image.jpg`} />
 
         {/* Structured Data */}
         <script

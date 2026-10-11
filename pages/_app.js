@@ -17,7 +17,7 @@ function MyApp({ Component, pageProps }) {
 
         {/* Favicon & App Icons */}
         <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
         {/* PWA Manifest */}
         <link rel="manifest" href="/manifest.json" />
