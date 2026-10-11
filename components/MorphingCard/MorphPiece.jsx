@@ -1,7 +1,7 @@
 // A flat text/graphic piece on the card that eases between per-stage states.
 // When its texture changes between stages it dissolves from the old texture
 // into the new one in blocky "pixels" with a cyan edge (the morph effect).
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { FACE_Z } from "./layout";
@@ -90,16 +90,16 @@ export function currentStage(timeline, clockTime, delay, reduced) {
 
 export const easeFactor = (rate, delta, reduced) => (reduced ? 1 : 1 - Math.exp(-rate * delta));
 
-export default function MorphPiece({ piece, timeline, reduced }) {
+export default function MorphPiece({ piece, timeline, initialStage, reduced }) {
   const meshRef = useRef();
-  const startState = piece.states[timeline.current.stage];
+  const [start] = useState(() => piece.states[initialStage]);
   // Created once per piece; later texture changes go through the uniforms
-  const material = useMemo(() => createTextMaterial(startState.tex), [piece]);
+  const material = useMemo(() => createTextMaterial(start.tex), [start]);
   const state = useRef({
-    applied: timeline.current.stage,
-    shown: startState.tex,
-    x: startState.x,
-    y: startState.y,
+    applied: initialStage,
+    shown: start.tex,
+    x: start.x,
+    y: start.y,
     opacity: 0,
     mix: 0,
     mixing: false,
@@ -111,7 +111,7 @@ export default function MorphPiece({ piece, timeline, reduced }) {
     const mesh = meshRef.current;
     const tl = timeline.current;
     const s = state.current;
-    const u = material.uniforms;
+    const u = mesh.material.uniforms;
     const stage = currentStage(tl, clock.elapsedTime, piece.delay, reduced);
     const target = piece.states[stage];
 

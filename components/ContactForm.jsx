@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/router';
 
 export default function ContactForm() {
@@ -8,12 +8,14 @@ export default function ContactForm() {
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState({});
 
-  // Pre-fill message if coming from a project page
-  useEffect(() => {
-    if (router.query.project) {
-      setMessage(`Hi! I'm interested in discussing the "${router.query.project}" project. `);
-    }
-  }, [router.query.project]);
+  // Pre-fill the message when arriving from a project page (?project=...).
+  // The query is only known after hydration, so adjust state during render.
+  const project = router.query.project;
+  const [prefilledFor, setPrefilledFor] = useState(null);
+  if (project && project !== prefilledFor) {
+    setPrefilledFor(project);
+    setMessage(`Hi! I'm interested in discussing the "${project}" project. `);
+  }
 
   // Validation function
   const validateForm = (formData) => {
@@ -146,7 +148,7 @@ export default function ContactForm() {
           htmlFor="contact-thoughts"
           className="block text-sm font-medium text-gray-300 mb-2"
         >
-          What's brewing in your mind? <span className="text-red-400">*</span>
+          What&apos;s brewing in your mind? <span className="text-red-400">*</span>
         </label>
         <textarea
           id="contact-thoughts"
@@ -200,7 +202,7 @@ export default function ContactForm() {
           aria-live="polite"
         >
           <span className="font-medium">✓ Message sent successfully!</span>
-          <p className="text-sm text-green-500 mt-1">I'll get back to you as soon as possible.</p>
+          <p className="text-sm text-green-500 mt-1">I&apos;ll get back to you as soon as possible.</p>
         </div>
       )}
       

@@ -2,7 +2,7 @@
 import dynamic from "next/dynamic";
 import Head from "next/head";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
 import userData from "./data/user.json";
 import ContactForm from "../components/ContactForm";
 import ProjectFilter from "../components/ProjectFilter";
@@ -27,6 +27,9 @@ const SKILL_CATEGORIES = {
   devops: { label: "DevOps", icon: "refresh" },
   tools: { label: "Tools", icon: "cog" },
 };
+// For browser values that never change while the page is open
+const subscribeNever = () => () => {};
+
 const SKILL_ACCENTS = [
   { icon: "text-purple-400 bg-purple-500/10", hover: "hover:border-purple-500/50" },
   { icon: "text-cyan-400 bg-cyan-500/10", hover: "hover:border-cyan-500/50" },
@@ -60,14 +63,12 @@ export default function Home({ githubStats, stackoverflowStats }) {
   const [filteredProjects, setFilteredProjects] = useState(user.projects);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [shortcutLabel, setShortcutLabel] = useState("⌘K");
-
-  // Show the right palette shortcut for the visitor's OS
-  useEffect(() => {
-    if (!/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) {
-      setShortcutLabel("Ctrl K");
-    }
-  }, []);
+  // Show the right palette shortcut for the visitor's OS (⌘K during SSR)
+  const shortcutLabel = useSyncExternalStore(
+    subscribeNever,
+    () => (/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? "⌘K" : "Ctrl K"),
+    () => "⌘K"
+  );
 
   // Close the mobile menu with Escape
   useEffect(() => {
@@ -474,7 +475,7 @@ export default function Home({ githubStats, stackoverflowStats }) {
                   style={{ animationDelay: "0.1s", animationFillMode: "both" }}
                   itemProp="headline"
                 >
-                  Hi, I'm
+                  Hi, I&apos;m
                   <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
                     {" "}
                     {user.name.split(" ")[0]}
@@ -1109,7 +1110,7 @@ export default function Home({ githubStats, stackoverflowStats }) {
                       Interested in working together?
                     </h2>
                     <p className="text-gray-400 text-lg mb-8">
-                      Let's build scalable systems and robust infrastructure.
+                      Let&apos;s build scalable systems and robust infrastructure.
                     </p>
 
                     <nav

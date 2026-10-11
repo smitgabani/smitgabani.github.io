@@ -1,6 +1,6 @@
 // The 3D scene: a card that tilts back into a board once the code becomes a
 // system, plus the text pieces, system blocks, edges and request particles.
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Line, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
@@ -121,12 +121,13 @@ function CardBase() {
 }
 
 // A service in the architecture: grows out of a code line into a 3D block
-function NodeBlock({ block, timeline, reduced }) {
+function NodeBlock({ block, timeline, initialStage, reduced }) {
   const groupRef = useRef();
   const boxRef = useRef();
+  const labelRef = useRef();
   const labelMaterial = useMemo(() => createTextMaterial(block.label), [block]);
   const [labelWidth, labelHeight] = block.label.userData.size;
-  const start = block.states[timeline.current.stage];
+  const [start] = useState(() => block.states[initialStage]);
   const state = useRef({ x: start.x, y: start.y, scale: 0.001, opacity: 0 });
 
   useEffect(() => () => labelMaterial.dispose(), [labelMaterial]);
@@ -147,7 +148,7 @@ function NodeBlock({ block, timeline, reduced }) {
     group.scale.setScalar(Math.max(s.scale, 0.001));
     group.visible = s.opacity > 0.01;
     boxRef.current.material.opacity = s.opacity;
-    labelMaterial.uniforms.opacity.value = s.opacity;
+    labelRef.current.material.uniforms.opacity.value = s.opacity;
   });
 
   return (
@@ -163,6 +164,7 @@ function NodeBlock({ block, timeline, reduced }) {
         />
       </RoundedBox>
       <mesh
+        ref={labelRef}
         geometry={PLANE}
         material={labelMaterial}
         position={[-labelWidth / 2, 0, block.depth / 2 + 0.003]}
@@ -265,10 +267,10 @@ function StoryContent({ story, stage, exiting, reduced }) {
   return (
     <>
       {layout.pieces.map((piece) => (
-        <MorphPiece key={piece.id} piece={piece} timeline={timeline} reduced={reduced} />
+        <MorphPiece key={piece.id} piece={piece} timeline={timeline} initialStage={stage} reduced={reduced} />
       ))}
       {layout.blocks.map((block) => (
-        <NodeBlock key={block.id} block={block} timeline={timeline} reduced={reduced} />
+        <NodeBlock key={block.id} block={block} timeline={timeline} initialStage={stage} reduced={reduced} />
       ))}
       {layout.edges.map((edge) => (
         <EdgeLine key={edge.id} edge={edge} timeline={timeline} reduced={reduced} />

@@ -335,7 +335,7 @@ export default function Blog({ posts, totalPosts, mediumUsername, user }) {
                 <div className="text-6xl mb-6">🚀</div>
                 <h2 className="text-2xl font-bold text-white mb-4">Coming Soon</h2>
                 <p className="text-gray-400 max-w-md mx-auto mb-8">
-                  I'm working on some exciting content about cloud infrastructure, microservices, and DevOps best practices. Stay tuned!
+                  I&apos;m working on some exciting content about cloud infrastructure, microservices, and DevOps best practices. Stay tuned!
                 </p>
                 <a 
                   href="https://medium.com/@smitgabani"
