@@ -2,74 +2,16 @@ import Head from 'next/head'
 import Link from 'next/link'
 import userData from '../../data/user.json'
 import SiteFooter from '../../components/SiteFooter'
+import { fetchMediumPosts, formatPostDate, MEDIUM_USERNAME } from '../../lib/api/medium'
 
 // Fetch Medium RSS feed at build time
 export async function getStaticProps() {
-  let posts = []
-  let totalPosts = 0
-  
-  // Your Medium username
-  const MEDIUM_USERNAME = 'smitgabani'
-  
-  try {
-    // Fetch directly from Medium RSS feed
-    const RSS_URL = `https://medium.com/feed/@${MEDIUM_USERNAME}`
-    
-    const response = await fetch(RSS_URL, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; Portfolio/1.0)'
-      }
-    })
-    const xmlText = await response.text()
-    
-    // Parse XML manually
-    const items = xmlText.match(/<item>([\s\S]*?)<\/item>/g) || []
-    
-    posts = items.slice(0, 10).map(item => {
-      const getTagContent = (tag) => {
-        const match = item.match(new RegExp(`<${tag}><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>`)) ||
-                      item.match(new RegExp(`<${tag}>([^<]*)<\\/${tag}>`))
-        return match ? match[1].trim() : ''
-      }
-      
-      const title = getTagContent('title')
-      const link = getTagContent('link')
-      const pubDate = getTagContent('pubDate')
-      const content = getTagContent('content:encoded') || getTagContent('description')
-      const categories = (item.match(/<category><!\[CDATA\[([^\]]+)\]\]><\/category>/g) || [])
-        .map(cat => cat.replace(/<category><!\[CDATA\[|\]\]><\/category>/g, ''))
-      
-      // Extract thumbnail from content
-      const imgMatch = content.match(/<img[^>]+src="([^"]+)"/)
-      const thumbnail = imgMatch ? imgMatch[1] : null
+  const { posts, total } = await fetchMediumPosts(10)
 
-      // Posts in publications only include a teaser ending in "Continue reading on …"
-      const fullText = stripHtml(content)
-      const isTeaser = /Continue reading on /i.test(fullText)
-      const text = fullText.replace(/\s*Continue reading on [\s\S]*$/i, '').trim()
-
-      return {
-        title: decodeEntities(title),
-        link,
-        pubDate,
-        thumbnail,
-        description: truncate(text, 200),
-        // Read time is only meaningful when the feed has the whole article
-        readTime: isTeaser ? null : getReadTime(fullText),
-        categories,
-        author: MEDIUM_USERNAME
-      }
-    })
-    
-    totalPosts = items.length
-  } catch (error) {
-    console.error('Error fetching Medium posts:', error)
-  }
-  
   return {
     props: {
       posts,
-      totalPosts,
+      totalPosts: total,
       mediumUsername: MEDIUM_USERNAME,
       user: {
         name: userData.name,
@@ -78,51 +20,6 @@ export async function getStaticProps() {
       }
     }
   }
-}
-
-// Decode the HTML entities Medium leaves in feed text (e.g. &#x2019; -> ’)
-const NAMED_ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' }
-
-function decodeEntities(text) {
-  return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, code) => {
-    if (code[0] === '#') {
-      const isHex = code[1].toLowerCase() === 'x'
-      const num = parseInt(code.slice(isHex ? 2 : 1), isHex ? 16 : 10)
-      return Number.isNaN(num) ? match : String.fromCodePoint(num)
-    }
-    return NAMED_ENTITIES[code.toLowerCase()] ?? match
-  })
-}
-
-// Helper function to strip HTML tags and decode entities
-function stripHtml(html) {
-  if (!html) return ''
-  const text = html.replace(/<[^>]*>/g, ' ')
-  return decodeEntities(text).replace(/\s+/g, ' ').trim()
-}
-
-// Shorten text at a word boundary
-function truncate(text, max) {
-  if (text.length <= max) return text
-  const cut = text.lastIndexOf(' ', max)
-  return text.slice(0, cut > 0 ? cut : max).replace(/[\s,.;:]+$/, '') + '…'
-}
-
-// Format date
-function formatDate(dateString) {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
-}
-
-// Calculate read time (rough estimate)
-function getReadTime(text) {
-  const words = text.split(' ').length
-  const minutes = Math.ceil(words / 200)
-  return `${minutes} min read`
 }
 
 export default function Blog({ posts, totalPosts, mediumUsername, user }) {
@@ -256,7 +153,7 @@ export default function Blog({ posts, totalPosts, mediumUsername, user }) {
                       <div className="flex-1 p-6">
                         {/* Meta top row */}
                         <div className="flex items-center gap-3 mb-3 text-xs text-gray-400">
-                          <span>{formatDate(post.pubDate)}</span>
+                          <span>{formatPostDate(post.pubDate)}</span>
                           {post.readTime && (
                             <>
                               <span aria-hidden="true">•</span>

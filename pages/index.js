@@ -13,9 +13,10 @@ import Experience from "../components/home/Experience";
 import Projects from "../components/home/Projects";
 import Skills from "../components/home/Skills";
 import Community from "../components/home/Community";
+import Writing from "../components/home/Writing";
 import Contact from "../components/home/Contact";
 
-export default function Home({ githubStats, stackoverflowStats }) {
+export default function Home({ githubStats, stackoverflowStats, latestPosts }) {
   const user = userData;
   const [showNavbar, setShowNavbar] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -63,6 +64,7 @@ export default function Home({ githubStats, stackoverflowStats }) {
           <Projects user={user} />
           <Skills user={user} />
           <Community user={user} githubStats={githubStats} stackoverflowStats={stackoverflowStats} />
+          <Writing posts={latestPosts} />
           <Contact user={user} />
         </main>
 
@@ -72,17 +74,28 @@ export default function Home({ githubStats, stackoverflowStats }) {
   );
 }
 
-// Fetch live GitHub and StackOverflow stats at build time
+// Fetch live GitHub/Stack Overflow stats and the latest blog posts at build time
 export async function getStaticProps() {
   const { fetchGitHubStats, formatStat: formatGitHubStat } = await import('../lib/api/github');
   const { fetchStackOverflowStats, formatStat: formatStackOverflowStat } = await import('../lib/api/stackoverflow');
+  const { fetchMediumPosts } = await import('../lib/api/medium');
 
   try {
     // Each fetcher returns null if its API is unreachable
-    const [githubData, stackoverflowData] = await Promise.all([
+    const [githubData, stackoverflowData, medium] = await Promise.all([
       fetchGitHubStats('smitgabani'),
       fetchStackOverflowStats('19144656'),
+      fetchMediumPosts(3),
     ]);
+
+    // Only what the home page cards show
+    const latestPosts = medium.posts.map(({ title, link, pubDate, thumbnail, readTime }) => ({
+      title,
+      link,
+      pubDate,
+      thumbnail,
+      readTime,
+    }));
 
     // Format stats for display; unknown values stay null and are hidden
     const githubStats = githubData && {
@@ -102,6 +115,7 @@ export async function getStaticProps() {
       props: {
         githubStats,
         stackoverflowStats,
+        latestPosts,
       },
       // Note: revalidate not supported with static export
       // Stats are fetched at build time only
@@ -114,6 +128,7 @@ export async function getStaticProps() {
       props: {
         githubStats: null,
         stackoverflowStats: null,
+        latestPosts: [],
       },
     };
   }
