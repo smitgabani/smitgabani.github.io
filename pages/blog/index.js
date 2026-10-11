@@ -1,6 +1,7 @@
 import Head from 'next/head'
 import Link from 'next/link'
-import userData from '../data/user.json'
+import userData from '../../data/user.json'
+import SiteFooter from '../../components/SiteFooter'
 
 // Fetch Medium RSS feed at build time
 export async function getStaticProps() {
@@ -105,13 +106,6 @@ function truncate(text, max) {
   if (text.length <= max) return text
   const cut = text.lastIndexOf(' ', max)
   return text.slice(0, cut > 0 ? cut : max).replace(/[\s,.;:]+$/, '') + '…'
-}
-
-// Helper function to extract first image from content
-function extractFirstImage(content) {
-  if (!content) return null
-  const match = content.match(/<img[^>]+src="([^">]+)"/)
-  return match ? match[1] : null
 }
 
 // Format date
@@ -375,14 +369,7 @@ export default function Blog({ posts, totalPosts, mediumUsername, user }) {
           </div>
         </main>
 
-        {/* Footer */}
-        <footer className="py-8 border-t border-gray-800">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p className="text-gray-500 text-sm">
-              © {new Date().getFullYear()} {user.name}. All rights reserved.
-            </p>
-          </div>
-        </footer>
+        <SiteFooter />
       </div>
       
       {/* Add line-clamp utility styles */}

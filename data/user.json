@@ -23,8 +23,8 @@
     "twitter": "https://twitter.com/SmitGabani7",
     "email": "mailto:gabanismit11@gmail.com"
   },
-  "resume_link": "./sg_resume.pdf",
-  "coverletter_link": "./sg_cover_letter.pdf",
+  "resume_link": "/sg_resume.pdf",
+  "coverletter_link": "/sg_cover_letter.pdf",
   "experience": [
     {
       "title": "Systems Developer & Cloud Consultant",

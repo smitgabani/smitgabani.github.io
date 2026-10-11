@@ -39,13 +39,14 @@ Optional: copy `.env.local.example` to `.env.local` and add a `GITHUB_TOKEN` to 
 
 ## Editing content
 
-All profile content (bio, experience, projects, skills, certifications and links) lives in [`pages/data/user.json`](pages/data/user.json). Project pages are generated from its `projects` list, and each project's `story` drives the hero animation (format documented in [`components/MorphingCard/index.js`](components/MorphingCard/index.js)).
+All profile content (bio, experience, projects, skills, certifications and links) lives in [`data/user.json`](data/user.json). Project pages are generated from its `projects` list, and each project's `story` drives the hero animation (format documented in [`components/MorphingCard/index.js`](components/MorphingCard/index.js)).
 
 ## Project structure
 
 ```
-pages/        Home, project pages and blog; data/user.json holds the content
-components/   UI components (command palette, contact form, morphing card, ...)
+data/         user.json: all site content
+pages/        Home, project pages and blog
+components/   UI components; home/ holds the home page sections, MorphingCard/ the hero animation
 lib/          GitHub and Stack Overflow API clients, shared helpers
 public/       Images, résumé, service worker, sitemap
 styles/       Global CSS

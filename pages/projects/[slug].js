@@ -1,6 +1,7 @@
 import Head from 'next/head'
 import Link from 'next/link'
-import userData from '../data/user.json'
+import userData from '../../data/user.json'
+import SiteFooter from '../../components/SiteFooter'
 import { categoryGradient } from '../../lib/projectCategories'
 
 export async function getStaticPaths() {
@@ -272,14 +273,7 @@ export default function ProjectPage({ project, prevProject, nextProject, user })
           </div>
         </nav>
 
-        {/* Footer */}
-        <footer className="py-8 border-t border-gray-800">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p className="text-gray-500 text-sm">
-              © {new Date().getFullYear()} {user.name}. All rights reserved.
-            </p>
-          </div>
-        </footer>
+        <SiteFooter />
       </div>
     </>
   )

@@ -74,7 +74,7 @@ export default function ContactForm() {
       } else {
         setResult("error");
       }
-    } catch (error) {
+    } catch {
       setResult("error");
     } finally {
       setIsSubmitting(false);

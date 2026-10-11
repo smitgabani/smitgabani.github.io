@@ -1,7 +1,7 @@
 /**
  * MorphingCard: a Three.js card that tells a project's story in four stages,
  *   Request -> Code -> System -> Users
- * using the `story` field on each project in pages/data/user.json.
+ * using the `story` field on each project in data/user.json.
  *
  * It renders WebGL, so import it client-side only:
  *   const MorphingCard = dynamic(() => import("../components/MorphingCard"), { ssr: false });
