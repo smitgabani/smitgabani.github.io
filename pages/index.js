@@ -331,7 +331,7 @@ export default function Home({ githubStats, stackoverflowStats }) {
 
                 <div className="flex items-center gap-1 md:gap-6">
                   {/* Nav Links */}
-                  <ul className="hidden md:flex items-center gap-6">
+                  <ul className="hidden md:flex items-center gap-4 lg:gap-6">
                     {NAV_SECTIONS.map((section) => (
                       <li key={section.id}>
                         <a
@@ -350,6 +350,17 @@ export default function Home({ githubStats, stackoverflowStats }) {
                         Blog
                       </Link>
                     </li>
+                    <li>
+                      <a
+                        href={resumeHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => trackDownload("resume.pdf")}
+                        className="text-gray-300 hover:text-white transition rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+                      >
+                        Résumé
+                      </a>
+                    </li>
                   </ul>
 
                   {/* Command palette trigger */}
@@ -360,7 +371,7 @@ export default function Home({ githubStats, stackoverflowStats }) {
                     aria-label="Search the site"
                   >
                     <Icon name="search" className="w-5 h-5 md:w-4 md:h-4" />
-                    <span className="hidden md:inline text-sm">Search</span>
+                    <span className="hidden lg:inline text-sm">Search</span>
                     <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 bg-gray-900/60 rounded text-xs font-mono border border-gray-600">
                       {shortcutLabel}
                     </kbd>
@@ -401,6 +412,17 @@ export default function Home({ githubStats, stackoverflowStats }) {
                     >
                       Blog
                     </Link>
+                  </li>
+                  <li>
+                    <a
+                      href={resumeHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => trackDownload("resume.pdf")}
+                      className="block px-2 py-3 text-gray-300 hover:text-white rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+                    >
+                      Résumé (PDF)
+                    </a>
                   </li>
                 </ul>
               )}
@@ -490,6 +512,16 @@ export default function Home({ githubStats, stackoverflowStats }) {
                   >
                     Contact Me
                   </button>
+                  <a
+                    href={resumeHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => trackDownload("resume.pdf")}
+                    className="inline-flex items-center gap-2 px-2 py-3 text-gray-300 hover:text-white font-medium transition rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+                  >
+                    <Icon name="document" className="w-5 h-5" />
+                    Résumé
+                  </a>
                 </nav>
               </div>
             </section>
