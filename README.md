@@ -2,7 +2,7 @@
 
 Source code for **[smitgabani.github.io](https://smitgabani.github.io)**, the portfolio of Smit Gabani, a Systems Developer & Cloud Architect based in Toronto.
 
-[Live site](https://smitgabani.github.io) · [Blog](https://smitgabani.github.io/blog/) · [Résumé](https://smitgabani.github.io/sg_resume.pdf) · [LinkedIn](https://linkedin.com/in/smitgabani) · [Email](mailto:gabanismit11@gmail.com)
+[Live site](https://smitgabani.github.io) · [Blog](https://smitgabani.github.io/blog/) · [LinkedIn](https://linkedin.com/in/smitgabani) · [Email](mailto:gabanismit11@gmail.com)
 
 ## About
 
@@ -48,7 +48,7 @@ data/         user.json: all site content
 pages/        Home, project pages and blog
 components/   UI components; home/ holds the home page sections, MorphingCard/ the hero animation
 lib/          GitHub and Stack Overflow API clients, shared helpers
-public/       Images, résumé, service worker, sitemap
+public/       Images, icons, retired service worker
 styles/       Global CSS
 ```
 

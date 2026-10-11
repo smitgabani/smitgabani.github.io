@@ -1,6 +1,5 @@
 import ContactForm from "../ContactForm";
 import Icon from "../Icon";
-import { trackDownload } from "../Analytics";
 
 export default function Contact({ user }) {
   return (
@@ -33,17 +32,6 @@ export default function Contact({ user }) {
                 aria-label="Send me an email"
               >
                 Email Me →
-              </a>
-              <a
-                href={user.resume_link}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackDownload("resume.pdf")}
-                className="px-8 py-4 border border-white text-white rounded-lg font-bold hover:bg-white/10 transition focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-950"
-                aria-label="Download my resume as PDF (opens in new tab)"
-                download
-              >
-                Download Resume
               </a>
             </nav>
 

@@ -41,7 +41,6 @@ export default function Home({ githubStats, stackoverflowStats, latestPosts }) {
         onOpenChange={setPaletteOpen}
         projects={user.projects}
         socialLinks={user.links}
-        resumeLink={user.resume_link}
       />
 
       {/* SEO: Main wrapper with semantic structure */}

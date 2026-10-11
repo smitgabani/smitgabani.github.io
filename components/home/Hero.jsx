@@ -1,7 +1,6 @@
 // Intro text plus the morphing card (requirement -> code -> system -> users)
 import dynamic from "next/dynamic";
-import Icon from "../Icon";
-import { trackButtonClick, trackDownload } from "../Analytics";
+import { trackButtonClick } from "../Analytics";
 import { scrollToSection } from "../../lib/sections";
 
 // Three.js card, client-side only (WebGL isn't available during SSR)
@@ -72,16 +71,6 @@ export default function Hero({ user }) {
           >
             Contact Me
           </button>
-          <a
-            href={user.resume_link}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => trackDownload("resume.pdf")}
-            className="inline-flex items-center gap-2 px-2 py-3 text-gray-300 hover:text-white font-medium transition rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-          >
-            <Icon name="document" className="w-5 h-5" />
-            Résumé
-          </a>
         </nav>
       </div>
     </section>

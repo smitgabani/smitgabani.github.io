@@ -1,7 +1,6 @@
 // Site-wide footer, shared by the home, blog and project pages
 import Link from "next/link";
 import user from "../data/user.json";
-import { trackDownload } from "./Analytics";
 import { NAV_SECTIONS } from "../lib/sections";
 
 export default function SiteFooter() {
@@ -118,18 +117,6 @@ export default function SiteFooter() {
                   className="hover:text-white transition rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:text-white"
                 >
                   {email}
-                </a>
-              </li>
-              <li className="pt-2">
-                <a
-                  href={user.resume_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => trackDownload("resume.pdf")}
-                  className="text-purple-400 hover:text-purple-300 transition rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-                  aria-label="Download my resume as PDF (opens in new tab)"
-                >
-                  Download Resume →
                 </a>
               </li>
             </ul>

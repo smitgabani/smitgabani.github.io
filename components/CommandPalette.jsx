@@ -54,7 +54,6 @@ export default function CommandPalette({
   onOpenChange,
   projects = [],
   socialLinks = {},
-  resumeLink,
 }) {
   const router = useRouter();
   const returnFocusRef = useRef(null);
@@ -130,16 +129,6 @@ export default function CommandPalette({
     ].filter(Boolean);
 
     const actions = [
-      resumeLink && {
-        id: 'resume',
-        icon: 'document',
-        label: 'Download Resume',
-        keywords: ['cv', 'pdf'],
-        run: () => {
-          window.open(resumeLink, '_blank', 'noopener,noreferrer');
-          trackButtonClick('Download Resume', 'Command Palette');
-        },
-      },
       {
         id: 'copy-url',
         icon: 'link',
@@ -187,7 +176,7 @@ export default function CommandPalette({
       { heading: 'Links', items: links },
       { heading: 'Actions', items: actions },
     ].filter((group) => group.items.length > 0);
-  }, [projects, socialLinks, resumeLink, router]);
+  }, [projects, socialLinks, router]);
 
   const visibleGroups = useMemo(() => filterGroups(groups, search), [groups, search]);
 
