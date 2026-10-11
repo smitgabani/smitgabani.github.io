@@ -8,7 +8,7 @@ export default function HomeHead({ user }) {
 
   // SEO: Canonical URL
   const siteUrl = "https://smitgabani.github.io";
-  const canonicalUrl = siteUrl;
+  const canonicalUrl = `${siteUrl}/`;
 
   // SEO: Structured Data (JSON-LD) for Person
   const personSchema = {
@@ -53,27 +53,6 @@ export default function HomeHead({ user }) {
     author: {
       "@type": "Person",
       name: user.name,
-    },
-  };
-
-  // SEO: Structured Data for Professional Service
-  const serviceSchema = {
-    "@context": "https://schema.org",
-    "@type": "ProfessionalService",
-    name: `${user.name} - ${user.title}`,
-    description: user.bio.join(" "),
-    url: siteUrl,
-    telephone: user.phone,
-    email: user.email,
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: user.location,
-      addressCountry: "Canada",
-    },
-    priceRange: "$$",
-    areaServed: {
-      "@type": "Country",
-      name: "Canada",
     },
   };
 
@@ -159,10 +138,6 @@ export default function HomeHead({ user }) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }}
       />
       <script
         type="application/ld+json"

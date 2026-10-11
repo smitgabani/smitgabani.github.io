@@ -35,7 +35,7 @@ export async function getStaticProps({ params }) {
 
 export default function ProjectPage({ project, prevProject, nextProject, user }) {
   const siteUrl = 'https://smitgabani.github.io'
-  const canonicalUrl = `${siteUrl}/projects/${project.slug}`
+  const canonicalUrl = `${siteUrl}/projects/${project.slug}/`
 
   const gradientColor = categoryGradient(project.category)
 

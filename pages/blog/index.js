@@ -127,7 +127,7 @@ function getReadTime(text) {
 
 export default function Blog({ posts, totalPosts, mediumUsername, user }) {
   const siteUrl = "https://smitgabani.github.io";
-  const canonicalUrl = `${siteUrl}/blog`;
+  const canonicalUrl = `${siteUrl}/blog/`;
 
   // Structured Data for Blog Collection
   const blogSchema = {
