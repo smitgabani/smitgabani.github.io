@@ -8,6 +8,15 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+/* Keep section headings clear of the fixed navbar when jumping to an anchor */
+main section[id] {
+  scroll-margin-top: 1rem;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -61,7 +70,7 @@ input[type="range"].slider::-moz-range-thumb:hover {
 @keyframes fade-in-up {
   0% {
     opacity: 0;
-    transform: translateY(80px);
+    transform: translateY(24px);
   }
   100% {
     opacity: 1;
@@ -70,7 +79,29 @@ input[type="range"].slider::-moz-range-thumb:hover {
 }
 
 .animate-fade-in-up {
-  animation: fade-in-up 1.5s ease-out;
+  animation: fade-in-up 0.7s ease-out;
+}
+
+/* Command palette group headings (cmdk renders these with a data attribute) */
+[cmdk-group-heading] {
+  padding: 0.5rem 0.75rem 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+/* Skills grid: stretch a lone last card across its row instead of leaving a gap */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .skills-grid > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+@media (min-width: 1024px) {
+  .skills-grid > :last-child:nth-child(3n + 1) {
+    grid-column: 1 / -1;
+  }
 }
 
 /* Gradient XY animation for mesh backgrounds */
@@ -112,6 +143,10 @@ input[type="range"].slider::-moz-range-thumb:hover {
 
 /* Respect user's motion preferences */
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   *,
   *::before,
   *::after {

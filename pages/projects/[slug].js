@@ -1,6 +1,7 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import userData from '../data/user.json'
+import { categoryGradient } from '../../lib/projectCategories'
 
 export async function getStaticPaths() {
   const paths = userData.projects.map((project) => ({
@@ -35,15 +36,7 @@ export default function ProjectPage({ project, prevProject, nextProject, user })
   const siteUrl = 'https://smitgabani.github.io'
   const canonicalUrl = `${siteUrl}/projects/${project.slug}`
 
-  // Category colors
-  const categoryColors = {
-    'Cloud & DevOps': 'from-blue-500 to-cyan-500',
-    'Developer Tools': 'from-green-500 to-emerald-500',
-    'Full-Stack': 'from-purple-500 to-pink-500',
-    'Backend': 'from-orange-500 to-red-500',
-  }
-
-  const gradientColor = categoryColors[project.category] || 'from-purple-500 to-cyan-500'
+  const gradientColor = categoryGradient(project.category)
 
   // Construct title for SEO
   const pageTitle = `${project.title} - ${project.category} | Smit Gabani`
@@ -139,20 +132,25 @@ export default function ProjectPage({ project, prevProject, nextProject, user })
         </nav>
 
         {/* Hero Section */}
-        <header className={`pt-32 pb-20 bg-gradient-to-br ${gradientColor} bg-opacity-10`}>
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Dark base with a soft category tint (a full-strength gradient made the grey text unreadable) */}
+        <header className="relative pt-32 pb-20 bg-gray-950 overflow-hidden">
+          <div
+            className={`absolute inset-0 bg-gradient-to-br ${gradientColor} opacity-20`}
+            aria-hidden="true"
+          />
+          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3 mb-4">
-              <span className="px-3 py-1 bg-gray-800/80 text-gray-300 rounded-full text-sm">
+              <span className="px-3 py-1 bg-gray-800/80 text-gray-200 rounded-full text-sm">
                 {project.category}
               </span>
-              <span className="text-gray-500 text-sm">{project.year}</span>
+              <span className="text-gray-300 text-sm">{project.year}</span>
             </div>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
               {project.title}
             </h1>
             
-            <p className="text-xl text-gray-400 mb-8">
+            <p className="text-xl text-gray-300 mb-8">
               {project.subtitle}
             </p>
             
@@ -161,7 +159,7 @@ export default function ProjectPage({ project, prevProject, nextProject, user })
               {project.tech.map((tech, index) => (
                 <span 
                   key={index}
-                  className="px-3 py-1 bg-gray-800/50 border border-gray-700 rounded-full text-sm text-gray-300"
+                  className="px-3 py-1 bg-gray-900/60 border border-gray-700 rounded-full text-sm text-gray-200"
                 >
                   {tech}
                 </span>
@@ -204,21 +202,6 @@ export default function ProjectPage({ project, prevProject, nextProject, user })
                   </li>
                 ))}
               </ul>
-            </section>
-
-            {/* Tech Stack Details */}
-            <section className="mb-16">
-              <h2 className="text-2xl font-bold text-white mb-6">Technology Stack</h2>
-              <div className="flex flex-wrap gap-3">
-                {project.tech.map((tech, index) => (
-                  <div 
-                    key={index}
-                    className="px-4 py-2 bg-gradient-to-r from-gray-800 to-gray-800/50 rounded-lg border border-gray-700 text-gray-300"
-                  >
-                    {tech}
-                  </div>
-                ))}
-              </div>
             </section>
 
             {/* CTA */}

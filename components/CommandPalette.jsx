@@ -2,14 +2,62 @@
  * Command Palette Component
  * Keyboard-driven navigation (CMD+K / CTRL+K)
  * Quick access to sections, projects, social links, and actions
+ *
+ * Controlled: the parent owns `open` so other UI (e.g. the navbar search
+ * button) can open it too.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/router';
 import { Command } from 'cmdk';
+import toast from 'react-hot-toast';
+import Icon from './Icon';
 import { trackButtonClick } from './Analytics';
+import { copyToClipboard } from '../lib/utils/clipboard';
+import { SECTIONS, scrollToSection } from '../lib/sections';
 
-export default function CommandPalette({ projects = [], socialLinks = {} }) {
-  const [open, setOpen] = useState(false);
+// Score an item against the query: label matches beat keyword matches.
+// Substring/word-start matching only — cmdk's default fuzzy scoring matched
+// "email" against project descriptions and ranked them above the Email item.
+function scoreItem(item, query) {
+  const label = item.label.toLowerCase();
+  if (label.startsWith(query)) return 1;
+  if (label.split(/\s+/).some((word) => word.startsWith(query))) return 0.9;
+  if (label.includes(query)) return 0.8;
+  const keywordWords = (item.keywords || []).flatMap((keyword) =>
+    keyword.toLowerCase().split(/[^a-z0-9]+/)
+  );
+  if (keywordWords.some((word) => word.startsWith(query))) return 0.5;
+  return 0;
+}
+
+// Filter and sort ourselves (cmdk's own group sorting didn't reorder groups):
+// best-matching items first within each group, best-matching group first.
+function filterGroups(groups, search) {
+  const query = search.trim().toLowerCase();
+  if (!query) return groups;
+
+  return groups
+    .map((group) => {
+      const items = group.items
+        .map((item) => ({ item, score: scoreItem(item, query) }))
+        .filter(({ score }) => score > 0)
+        .sort((a, b) => b.score - a.score);
+      return { ...group, items: items.map(({ item }) => item), best: items[0]?.score ?? 0 };
+    })
+    .filter((group) => group.items.length > 0)
+    .sort((a, b) => b.best - a.best);
+}
+
+export default function CommandPalette({
+  open,
+  onOpenChange,
+  projects = [],
+  socialLinks = {},
+  resumeLink,
+}) {
+  const router = useRouter();
+  const returnFocusRef = useRef(null);
   const [search, setSearch] = useState('');
 
   // Toggle command palette with CMD+K or CTRL+K
@@ -17,76 +65,147 @@ export default function CommandPalette({ projects = [], socialLinks = {} }) {
     const down = (e) => {
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        setOpen((open) => !open);
+        onOpenChange(!open);
       }
     };
 
     document.addEventListener('keydown', down);
     return () => document.removeEventListener('keydown', down);
-  }, []);
+  }, [open, onOpenChange]);
 
-  // Close on ESC
+  // Lock body scroll while open, reset the query and restore focus on close
   useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === 'Escape') {
-        setOpen(false);
-      }
-    };
+    if (!open) return;
 
-    if (open) {
-      document.addEventListener('keydown', handleEsc);
-      // Prevent body scroll when command palette is open
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
+    returnFocusRef.current = document.activeElement;
+    document.body.style.overflow = 'hidden';
 
     return () => {
-      document.removeEventListener('keydown', handleEsc);
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = '';
+      setSearch('');
+      // preventScroll so restoring focus doesn't cancel a section scroll
+      returnFocusRef.current?.focus?.({ preventScroll: true });
     };
   }, [open]);
 
-  const handleSelect = (callback) => {
-    callback();
-    setOpen(false);
-    setSearch('');
-  };
+  const groups = useMemo(() => {
+    const openLink = (url, label) => {
+      window.open(url, '_blank', 'noopener,noreferrer');
+      trackButtonClick(label, 'Command Palette');
+    };
 
-  const scrollToSection = (sectionId) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      trackButtonClick(`Navigate to ${sectionId}`, 'Command Palette');
-    }
-  };
+    const links = [
+      socialLinks.github && {
+        id: 'github',
+        icon: 'github',
+        label: 'GitHub',
+        description: 'View my repositories',
+        run: () => openLink(socialLinks.github, 'GitHub'),
+      },
+      socialLinks.linkedin && {
+        id: 'linkedin',
+        icon: 'external',
+        label: 'LinkedIn',
+        description: 'Connect with me',
+        run: () => openLink(socialLinks.linkedin, 'LinkedIn'),
+      },
+      socialLinks.twitter && {
+        id: 'twitter',
+        icon: 'external',
+        label: 'Twitter',
+        description: 'Follow me',
+        run: () => openLink(socialLinks.twitter, 'Twitter'),
+      },
+      socialLinks.email && {
+        id: 'email',
+        icon: 'mail',
+        label: 'Email',
+        description: socialLinks.email.replace(/^mailto:/, ''),
+        keywords: ['mail', 'contact'],
+        run: () => {
+          window.location.href = socialLinks.email;
+          trackButtonClick('Email', 'Command Palette');
+        },
+      },
+    ].filter(Boolean);
 
-  const openLink = (url, label) => {
-    window.open(url, '_blank', 'noopener,noreferrer');
-    trackButtonClick(label, 'Command Palette');
-  };
+    const actions = [
+      resumeLink && {
+        id: 'resume',
+        icon: 'document',
+        label: 'Download Resume',
+        keywords: ['cv', 'pdf'],
+        run: () => {
+          window.open(resumeLink, '_blank', 'noopener,noreferrer');
+          trackButtonClick('Download Resume', 'Command Palette');
+        },
+      },
+      {
+        id: 'copy-url',
+        icon: 'link',
+        label: 'Copy Page URL',
+        keywords: ['share', 'link'],
+        run: async () => {
+          const copied = await copyToClipboard(window.location.href);
+          if (copied) {
+            toast.success('Page URL copied');
+          } else {
+            toast.error('Could not copy the URL');
+          }
+        },
+      },
+    ].filter(Boolean);
 
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-6 left-6 z-50 flex items-center gap-2 px-4 py-2 bg-gray-800/90 backdrop-blur-sm text-gray-300 rounded-lg border border-gray-700 hover:bg-gray-700 transition-all duration-200 shadow-xl hover:shadow-2xl group"
-        aria-label="Open command palette"
-      >
-        <span className="text-sm font-medium">Search</span>
-        <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 bg-gray-900/50 rounded text-xs font-mono border border-gray-600">
-          <span className="text-xs">⌘</span>K
-        </kbd>
-      </button>
-    );
-  }
+    return [
+      {
+        heading: 'Navigation',
+        items: SECTIONS.map((section) => ({
+          id: `section-${section.id}`,
+          icon: section.icon,
+          label: section.label,
+          run: () => {
+            if (scrollToSection(section.id)) {
+              trackButtonClick(`Navigate to ${section.id}`, 'Command Palette');
+            }
+          },
+        })),
+      },
+      {
+        heading: 'Projects',
+        items: projects.map((project) => ({
+          id: `project-${project.slug}`,
+          icon: 'folder',
+          label: project.title,
+          description: project.subtitle,
+          keywords: [project.category, ...(project.tech || [])].filter(Boolean),
+          run: () => {
+            router.push(`/projects/${project.slug}`);
+            trackButtonClick(`Open ${project.title}`, 'Command Palette');
+          },
+        })),
+      },
+      { heading: 'Links', items: links },
+      { heading: 'Actions', items: actions },
+    ].filter((group) => group.items.length > 0);
+  }, [projects, socialLinks, resumeLink, router]);
+
+  const visibleGroups = useMemo(() => filterGroups(groups, search), [groups, search]);
+
+  if (!open) return null;
+
+  const close = () => onOpenChange(false);
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-start justify-center pt-[15vh] px-4">
+    <div
+      className="fixed inset-0 z-[9999] flex items-start justify-center pt-[15vh] px-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Command menu"
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={() => setOpen(false)}
+        onClick={close}
         aria-hidden="true"
       />
 
@@ -94,33 +213,21 @@ export default function CommandPalette({ projects = [], socialLinks = {} }) {
       <Command
         className="relative w-full max-w-2xl bg-gray-900 rounded-xl shadow-2xl border border-gray-700 overflow-hidden"
         label="Command Menu"
-        shouldFilter={true}
+        shouldFilter={false}
         onKeyDown={(e) => {
           if (e.key === 'Escape') {
             e.preventDefault();
-            setOpen(false);
+            close();
           }
         }}
       >
         {/* Search Input */}
         <div className="flex items-center border-b border-gray-700 px-4">
-          <svg
-            className="w-5 h-5 text-gray-400 mr-3"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
+          <Icon name="search" className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
           <Command.Input
             value={search}
             onValueChange={setSearch}
-            placeholder="Type a command or search..."
+            placeholder="Search sections, projects, links..."
             className="w-full bg-transparent py-4 text-gray-100 placeholder-gray-500 outline-none text-base"
             autoFocus
           />
@@ -132,185 +239,37 @@ export default function CommandPalette({ projects = [], socialLinks = {} }) {
             No results found.
           </Command.Empty>
 
-          {/* Navigation Section */}
-          <Command.Group
-            heading="Navigation"
-            className="px-2 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider"
-          >
-            <CommandItem
-              onSelect={() => handleSelect(() => scrollToSection('home'))}
-              icon="🏠"
-              label="Home"
-              shortcut="H"
-            />
-            <CommandItem
-              onSelect={() => handleSelect(() => scrollToSection('about'))}
-              icon="👤"
-              label="About"
-              shortcut="A"
-            />
-            <CommandItem
-              onSelect={() => handleSelect(() => scrollToSection('experience'))}
-              icon="💼"
-              label="Experience"
-              shortcut="E"
-            />
-            <CommandItem
-              onSelect={() => handleSelect(() => scrollToSection('skills'))}
-              icon="⚡"
-              label="Skills"
-              shortcut="S"
-            />
-            <CommandItem
-              onSelect={() => handleSelect(() => scrollToSection('achievements'))}
-              icon="🏆"
-              label="Achievements"
-              shortcut="G"
-            />
-            <CommandItem
-              onSelect={() => handleSelect(() => scrollToSection('projects'))}
-              icon="🚀"
-              label="Projects"
-              shortcut="P"
-            />
-            <CommandItem
-              onSelect={() => handleSelect(() => scrollToSection('contact'))}
-              icon="📧"
-              label="Contact"
-              shortcut="C"
-            />
-          </Command.Group>
-
-          {/* Projects Section */}
-          {projects.length > 0 && (
-            <Command.Group
-              heading="Projects"
-              className="px-2 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider"
-            >
-              {projects.slice(0, 5).map((project, index) => {
-                // Handle description as either string or array
-                let desc = '';
-                if (typeof project.description === 'string') {
-                  desc = project.description.substring(0, 50) + '...';
-                } else if (Array.isArray(project.description) && project.description.length > 0) {
-                  desc = project.description[0].substring(0, 50) + '...';
-                }
-
-                return (
-                  <CommandItem
-                    key={project.id || index}
-                    onSelect={() => handleSelect(() => {
-                      if (project.link) {
-                        openLink(project.link, `Open ${project.title}`);
-                      } else {
-                        scrollToSection('projects');
-                      }
-                    })}
-                    icon="📁"
-                    label={project.title}
-                    description={desc}
-                  />
-                );
-              })}
+          {visibleGroups.map((group) => (
+            <Command.Group key={group.heading} heading={group.heading}>
+              {group.items.map((item) => (
+                <CommandItem
+                  key={item.id}
+                  item={item}
+                  onSelect={() => {
+                    close();
+                    item.run();
+                  }}
+                />
+              ))}
             </Command.Group>
-          )}
-
-          {/* Social Links Section */}
-          {Object.keys(socialLinks).length > 0 && (
-            <Command.Group
-              heading="Social"
-              className="px-2 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider"
-            >
-              {socialLinks.github && (
-                <CommandItem
-                  onSelect={() => handleSelect(() => openLink(socialLinks.github, 'GitHub'))}
-                  icon="💻"
-                  label="GitHub"
-                  description="View my repositories"
-                />
-              )}
-              {socialLinks.linkedin && (
-                <CommandItem
-                  onSelect={() => handleSelect(() => openLink(socialLinks.linkedin, 'LinkedIn'))}
-                  icon="💼"
-                  label="LinkedIn"
-                  description="Connect with me"
-                />
-              )}
-              {socialLinks.twitter && (
-                <CommandItem
-                  onSelect={() => handleSelect(() => openLink(socialLinks.twitter, 'Twitter'))}
-                  icon="🐦"
-                  label="Twitter"
-                  description="Follow me"
-                />
-              )}
-              {socialLinks.email && (
-                <CommandItem
-                  onSelect={() => handleSelect(() => {
-                    window.location.href = `mailto:${socialLinks.email}`;
-                    trackButtonClick('Email', 'Command Palette');
-                  })}
-                  icon="📧"
-                  label="Email"
-                  description={socialLinks.email}
-                />
-              )}
-            </Command.Group>
-          )}
-
-          {/* Actions Section */}
-          <Command.Group
-            heading="Actions"
-            className="px-2 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider"
-          >
-            <CommandItem
-              onSelect={() => handleSelect(() => {
-                const url = '/resume.pdf'; // Adjust path as needed
-                window.open(url, '_blank');
-                trackButtonClick('Download Resume', 'Command Palette');
-              })}
-              icon="📄"
-              label="Download Resume"
-              shortcut="R"
-            />
-            <CommandItem
-              onSelect={() => handleSelect(() => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              })}
-              icon="⬆️"
-              label="Scroll to Top"
-              shortcut="↑"
-            />
-            <CommandItem
-              onSelect={() => handleSelect(() => {
-                navigator.clipboard.writeText(window.location.href);
-                alert('URL copied to clipboard!');
-              })}
-              icon="📋"
-              label="Copy Page URL"
-              shortcut="U"
-            />
-          </Command.Group>
+          ))}
         </Command.List>
 
         {/* Footer */}
         <div className="border-t border-gray-700 px-4 py-2 bg-gray-800/50">
-          <div className="flex items-center justify-between text-xs text-gray-400">
-            <div className="flex items-center gap-4">
-              <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-gray-900/50 rounded text-xs border border-gray-600">↑↓</kbd>
-                Navigate
-              </span>
-              <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-gray-900/50 rounded text-xs border border-gray-600">↵</kbd>
-                Select
-              </span>
-              <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-gray-900/50 rounded text-xs border border-gray-600">ESC</kbd>
-                Close
-              </span>
-            </div>
+          <div className="flex items-center gap-4 text-xs text-gray-400">
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 bg-gray-900/50 rounded text-xs border border-gray-600">↑↓</kbd>
+              Navigate
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 bg-gray-900/50 rounded text-xs border border-gray-600">↵</kbd>
+              Select
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 bg-gray-900/50 rounded text-xs border border-gray-600">Esc</kbd>
+              Close
+            </span>
           </div>
         </div>
       </Command>
@@ -319,28 +278,25 @@ export default function CommandPalette({ projects = [], socialLinks = {} }) {
 }
 
 // Command Item Component
-function CommandItem({ onSelect, icon, label, description, shortcut }) {
+function CommandItem({ item, onSelect }) {
   return (
     <Command.Item
+      value={item.id}
       onSelect={onSelect}
-      className="flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer text-gray-300 hover:bg-gray-800 hover:text-white transition-colors duration-150 data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-purple-600 data-[selected=true]:to-pink-600 data-[selected=true]:text-white group"
+      className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-gray-300 transition-colors duration-150 data-[selected=true]:bg-purple-600/90 data-[selected=true]:text-white group"
     >
-      <div className="flex items-center gap-3 flex-1 min-w-0">
-        <span className="text-lg flex-shrink-0">{icon}</span>
-        <div className="flex flex-col min-w-0">
-          <span className="text-sm font-medium truncate">{label}</span>
-          {description && (
-            <span className="text-xs text-gray-500 group-data-[selected=true]:text-gray-200 truncate">
-              {description}
-            </span>
-          )}
-        </div>
+      <Icon
+        name={item.icon}
+        className="w-5 h-5 flex-shrink-0 text-gray-500 group-data-[selected=true]:text-white"
+      />
+      <div className="flex flex-col min-w-0">
+        <span className="text-sm font-medium truncate">{item.label}</span>
+        {item.description && (
+          <span className="text-xs text-gray-500 group-data-[selected=true]:text-purple-100 truncate">
+            {item.description}
+          </span>
+        )}
       </div>
-      {shortcut && (
-        <kbd className="hidden sm:inline-flex items-center px-2 py-0.5 bg-gray-900/50 group-data-[selected=true]:bg-white/20 rounded text-xs font-mono border border-gray-600 group-data-[selected=true]:border-white/30">
-          {shortcut}
-        </kbd>
-      )}
     </Command.Item>
   );
 }

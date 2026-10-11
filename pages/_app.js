@@ -35,28 +35,9 @@ function MyApp({ Component, pageProps }) {
         <meta name="theme-color" content="#030712" />
         <meta name="msapplication-TileColor" content="#030712" />
 
-        {/* Preconnect to external domains for performance */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-
         {/* DNS Prefetch for external resources */}
         <link rel="dns-prefetch" href="https://github.com" />
         <link rel="dns-prefetch" href="https://linkedin.com" />
-
-        {/* Preload critical images */}
-        <link rel="preload" as="image" href="/smitgabani.jpg" />
-
-        {/* Preload critical fonts if using web fonts */}
-        <link
-          rel="preload"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
       </Head>
       <Analytics gaId="G-PGHBTZGRC6" />
       <Toaster

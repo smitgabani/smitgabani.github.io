@@ -1,45 +1,43 @@
-// Project filtering component with technology and category filters
-import { useState, useMemo } from 'react';
+// Project filtering component with category pills and free-text search
+import { useState, useMemo, useEffect } from 'react';
 
 export default function ProjectFilter({ projects, onFilterChange }) {
-  const [selectedTech, setSelectedTech] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Extract all unique technologies from projects
-  const allTechnologies = useMemo(() => {
-    const techSet = new Set();
-    projects.forEach(project => {
-      if (project.tech_stack) {
-        project.tech_stack.forEach(tech => techSet.add(tech));
-      }
-    });
-    return ['all', ...Array.from(techSet).sort()];
+  // Unique categories in the order they first appear in the data
+  const categories = useMemo(() => {
+    const unique = [...new Set(projects.map((project) => project.category).filter(Boolean))];
+    return ['all', ...unique];
   }, [projects]);
 
-  // Filter projects based on selected tech and search query
+  // Filter by category, then by title / description / tech
   const filteredProjects = useMemo(() => {
-    return projects.filter(project => {
-      const matchesTech = selectedTech === 'all' ||
-        (project.tech_stack && project.tech_stack.includes(selectedTech));
+    const query = searchQuery.trim().toLowerCase();
 
-      // Handle description as either string or array
-      let descriptionText = '';
-      if (typeof project.description === 'string') {
-        descriptionText = project.description;
-      } else if (Array.isArray(project.description)) {
-        descriptionText = project.description.join(' ');
-      }
+    return projects.filter((project) => {
+      const matchesCategory =
+        selectedCategory === 'all' || project.category === selectedCategory;
 
-      const matchesSearch = !searchQuery ||
-        (project.title && project.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        descriptionText.toLowerCase().includes(searchQuery.toLowerCase());
+      if (!query) return matchesCategory;
 
-      return matchesTech && matchesSearch;
+      const haystack = [
+        project.title,
+        project.subtitle,
+        project.desc1,
+        project.desc2,
+        ...(project.tech || []),
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      return matchesCategory && haystack.includes(query);
     });
-  }, [projects, selectedTech, searchQuery]);
+  }, [projects, selectedCategory, searchQuery]);
 
   // Notify parent component when filters change
-  useMemo(() => {
+  useEffect(() => {
     if (onFilterChange) {
       onFilterChange(filteredProjects);
     }
@@ -49,19 +47,24 @@ export default function ProjectFilter({ projects, onFilterChange }) {
     <div className="mb-8 space-y-4">
       {/* Search Bar */}
       <div className="relative">
+        <label htmlFor="project-search" className="sr-only">
+          Search projects
+        </label>
         <input
-          type="text"
-          placeholder="Search projects..."
+          id="project-search"
+          type="search"
+          placeholder="Search by name or technology..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full px-4 py-3 pl-10 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
         />
         <svg
-          className="absolute left-3 top-3.5 h-5 w-5 text-gray-500"
+          className="absolute left-3 top-3.5 h-5 w-5 text-gray-500 pointer-events-none"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -72,29 +75,30 @@ export default function ProjectFilter({ projects, onFilterChange }) {
         </svg>
       </div>
 
-      {/* Technology Filter Pills */}
-      <div className="flex flex-wrap gap-2">
-        {allTechnologies.map(tech => (
+      {/* Category Filter Pills */}
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by category">
+        {categories.map((category) => (
           <button
-            key={tech}
-            onClick={() => setSelectedTech(tech)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              selectedTech === tech
+            key={category}
+            onClick={() => setSelectedCategory(category)}
+            aria-pressed={selectedCategory === category}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 ${
+              selectedCategory === category
                 ? 'bg-purple-600 text-white'
                 : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700 border border-gray-700'
             }`}
           >
-            {tech === 'all' ? 'All Projects' : tech}
+            {category === 'all' ? 'All' : category}
           </button>
         ))}
       </div>
 
       {/* Results Count */}
-      <div className="text-sm text-gray-400">
+      <p className="text-sm text-gray-400" aria-live="polite">
         Showing {filteredProjects.length} of {projects.length} projects
-        {searchQuery && ` matching "${searchQuery}"`}
-        {selectedTech !== 'all' && ` using ${selectedTech}`}
-      </div>
+        {searchQuery.trim() && ` matching "${searchQuery.trim()}"`}
+        {selectedCategory !== 'all' && ` in ${selectedCategory}`}
+      </p>
     </div>
   );
 }

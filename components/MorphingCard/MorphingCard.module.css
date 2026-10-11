@@ -1,0 +1,28 @@
+/* Progress bar under the active step; restarted per step via React key */
+.progress {
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.2rem;
+  height: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #8b5cf6, #22d3ee);
+  transform-origin: left;
+  animation-name: fill;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Soft glow behind the card (cheaper than doing it in WebGL) */
+.glow {
+  background: radial-gradient(ellipse at center, rgba(139, 92, 246, 0.16), transparent 62%);
+}

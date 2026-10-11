@@ -8,97 +8,86 @@ import ContactForm from "../components/ContactForm";
 import ProjectFilter from "../components/ProjectFilter";
 import ScrollProgress from "../components/ScrollProgress";
 import CommandPalette from "../components/CommandPalette";
-import { trackButtonClick, trackDownload, trackExternalLink } from "../components/Analytics";
+import Icon from "../components/Icon";
+import { trackButtonClick, trackDownload } from "../components/Analytics";
+import { NAV_SECTIONS, scrollToSection } from "../lib/sections";
+import { categoryGradient } from "../lib/projectCategories";
 
-// Dynamic import to avoid SSR issues with Three.js
-const Logo3DProvider = dynamic(
-  () => import("../components/Logo3D").then((mod) => mod.Logo3DProvider),
-  { ssr: false }
-);
-const Logo3DView = dynamic(
-  () => import("../components/Logo3D").then((mod) => mod.Logo3DView),
-  { ssr: false }
-);
-// Standalone Logo3D for elements that need their own z-index layer (like navbar)
-const Logo3D = dynamic(() => import("../components/Logo3D"), { ssr: false });
+// Three.js card, client-side only (WebGL isn't available during SSR)
+const MorphingCard = dynamic(() => import("../components/MorphingCard"), { ssr: false });
+
+// Skill category display names and icons. Accents alternate between the two
+// brand colors; class names are static so Tailwind can generate them.
+const SKILL_CATEGORIES = {
+  systems: { label: "Systems", icon: "chip" },
+  languages: { label: "Languages", icon: "code" },
+  backend: { label: "Backend", icon: "server" },
+  databases: { label: "Databases", icon: "database" },
+  cloud: { label: "Cloud", icon: "cloud" },
+  devops: { label: "DevOps", icon: "refresh" },
+  tools: { label: "Tools", icon: "cog" },
+};
+const SKILL_ACCENTS = [
+  { icon: "text-purple-400 bg-purple-500/10", hover: "hover:border-purple-500/50" },
+  { icon: "text-cyan-400 bg-cyan-500/10", hover: "hover:border-cyan-500/50" },
+];
 
 export default function Home({ githubStats, stackoverflowStats }) {
-  // Merge live stats with user data
-  const user = {
-    ...userData,
-    achievements: {
-      ...userData.achievements,
-      github: {
-        ...userData.achievements?.github,
-        stats: githubStats || userData.achievements?.github?.stats,
-      },
-      stackoverflow: {
-        ...userData.achievements?.stackoverflow,
-        stats: stackoverflowStats || userData.achievements?.stackoverflow?.stats,
-      },
-    },
-  };
-  const [showNavbar, setShowNavbar] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [orbitMode, setOrbitMode] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [filteredProjects, setFilteredProjects] = useState(user.projects);
+  const user = userData;
+  const resumeHref = user.resume_link.replace(/^\.\//, "/");
+  const email = user.links.email.replace(/^mailto:/, "");
 
-  // Detect mobile device
+  // Live stats are fetched at build time; anything that couldn't be fetched
+  // (null) or is zero gets no tile, rather than a guess or an empty metric.
+  const hasValue = (tile) => tile.value != null && tile.value !== "0";
+  const githubTiles = [
+    { label: "Repositories", value: githubStats?.repositories },
+    { label: "Contributions (past year)", value: githubStats?.contributions },
+    { label: "Stars Earned", value: githubStats?.stars },
+    { label: "Followers", value: githubStats?.followers },
+  ].filter(hasValue);
+  const stackoverflowTiles = [
+    { label: "Reputation", value: stackoverflowStats?.reputation },
+    { label: "Answers", value: stackoverflowStats?.answers },
+  ].filter(hasValue);
+  const stackoverflowBadges = [
+    { name: "gold", color: "bg-yellow-500", count: stackoverflowStats?.badges?.gold },
+    { name: "silver", color: "bg-gray-400", count: stackoverflowStats?.badges?.silver },
+    { name: "bronze", color: "bg-amber-700", count: stackoverflowStats?.badges?.bronze },
+  ].filter((badge) => badge.count > 0);
+
+  const [showNavbar, setShowNavbar] = useState(false);
+  const [filteredProjects, setFilteredProjects] = useState(user.projects);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [shortcutLabel, setShortcutLabel] = useState("⌘K");
+
+  // Show the right palette shortcut for the visitor's OS
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
+    if (!/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) {
+      setShortcutLabel("Ctrl K");
+    }
   }, []);
 
-  // Custom smooth scroll function with configurable duration
-  const smoothScrollTo = (elementId, duration = 2000) => {
-    const target = document.getElementById(elementId);
-    if (!target) return;
-
-    const targetPosition = target.getBoundingClientRect().top + window.scrollY;
-    const startPosition = window.scrollY;
-    const distance = targetPosition - startPosition;
-    let startTime = null;
-
-    const animation = (currentTime) => {
-      if (startTime === null) startTime = currentTime;
-      const timeElapsed = currentTime - startTime;
-      const progress = Math.min(timeElapsed / duration, 1);
-
-      // Ease-in-out cubic function for smooth animation
-      const easeInOutCubic =
-        progress < 0.5
-          ? 4 * progress * progress * progress
-          : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-
-      window.scrollTo(0, startPosition + distance * easeInOutCubic);
-
-      if (timeElapsed < duration) {
-        requestAnimationFrame(animation);
-      }
+  // Close the mobile menu with Escape
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setMobileMenuOpen(false);
     };
-
-    requestAnimationFrame(animation);
-  };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [mobileMenuOpen]);
 
   useEffect(() => {
     const handleScroll = () => {
-      const viewportHeight = window.innerHeight;
-      const scrollY = window.scrollY;
-
-      // Calculate scroll progress (0 to 1) based on scrolling through hero section
-      const progress = Math.min(scrollY / (viewportHeight * 0.8), 1);
-      setScrollProgress(progress);
-
-      // Show navbar when scrolled past 80% of viewport
-      setShowNavbar(scrollY > viewportHeight * 0.8);
+      // Show navbar (and back-to-top) once scrolled past 80% of the hero
+      const pastHero = window.scrollY > window.innerHeight * 0.8;
+      setShowNavbar(pastHero);
+      if (!pastHero) setMobileMenuOpen(false);
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -181,37 +170,22 @@ export default function Home({ githubStats, stackoverflowStats }) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      {
+      { "@type": "ListItem", position: 1, name: "Home", item: siteUrl },
+      ...NAV_SECTIONS.map((section, index) => ({
         "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: siteUrl,
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "About",
-        item: `${siteUrl}#about`,
-      },
-      {
-        "@type": "ListItem",
-        position: 3,
-        name: "Skills",
-        item: `${siteUrl}#skills`,
-      },
-      {
-        "@type": "ListItem",
-        position: 4,
-        name: "Projects",
-        item: `${siteUrl}#projects`,
-      },
-      {
-        "@type": "ListItem",
-        position: 5,
-        name: "Contact",
-        item: `${siteUrl}#contact`,
-      },
+        position: index + 2,
+        name: section.label,
+        item: `${siteUrl}#${section.id}`,
+      })),
     ],
+  };
+
+  const backToTop = () => {
+    // Release focus first: the button unmounts mid-scroll, and Chrome cancels
+    // a smooth scroll when the focused element disappears.
+    document.activeElement?.blur?.();
+    scrollToSection("hero");
+    trackButtonClick("Back to top", "Floating button");
   };
 
   return (
@@ -293,12 +267,18 @@ export default function Home({ githubStats, stackoverflowStats }) {
         />
       </Head>
 
-      <Logo3DProvider>
+      <>
         {/* Scroll Progress Indicator */}
         <ScrollProgress />
 
         {/* Command Palette - Press CMD+K or CTRL+K */}
-        <CommandPalette projects={user.projects} socialLinks={user.links} />
+        <CommandPalette
+          open={paletteOpen}
+          onOpenChange={setPaletteOpen}
+          projects={user.projects}
+          socialLinks={user.links}
+          resumeLink={resumeHref}
+        />
 
         {/* SEO: Main wrapper with semantic structure */}
         <div
@@ -322,147 +302,123 @@ export default function Home({ githubStats, stackoverflowStats }) {
               showNavbar ? "translate-y-0" : "-translate-y-full"
             }`}
             role="banner"
+            inert={!showNavbar}
           >
             <nav
               className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
               aria-label="Main navigation"
             >
-              <div className="flex items-center justify-between h-20">
+              <div className="flex items-center justify-between h-16">
                 {/* Logo + Brand Name */}
                 <a
                   href="#hero"
-                  className="flex items-center gap-4"
-                  aria-label={`${user.name} - Go to homepage`}
+                  className="flex items-center gap-3 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+                  aria-label={`${user.name} - Back to top`}
                 >
-                  <Logo3D width={2} height={2} rotationSpeed={0.5} />
                   <span
-                    className="text-white text-2xl font-bold"
+                    className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-white text-sm font-bold"
+                    aria-hidden="true"
+                  >
+                    SG
+                  </span>
+                  <span
+                    className="text-white text-xl font-bold"
                     itemProp="name"
                   >
                     {user.name}
                   </span>
                 </a>
 
-                {/* Nav Links */}
-                <ul
-                  className="hidden md:flex items-center gap-8"
-                  role="menubar"
-                >
-                  <li role="none">
-                    <a
-                      href="#hero"
-                      role="menuitem"
-                      className="text-gray-300 hover:text-white transition"
-                    >
-                      Home
-                    </a>
-                  </li>
-                  <li role="none">
-                    <a
-                      href="#about"
-                      role="menuitem"
-                      className="text-gray-300 hover:text-white transition"
-                    >
-                      About
-                    </a>
-                  </li>
-                  <li role="none">
-                    <a
-                      href="#skills"
-                      role="menuitem"
-                      className="text-gray-300 hover:text-white transition"
-                    >
-                      Skills
-                    </a>
-                  </li>
-                  <li role="none">
-                    <a
-                      href="#experience"
-                      role="menuitem"
-                      className="text-gray-300 hover:text-white transition"
-                    >
-                      Experience
-                    </a>
-                  </li>
-                  <li role="none">
-                    <a
-                      href="#projects"
-                      role="menuitem"
-                      className="text-gray-300 hover:text-white transition"
-                    >
-                      Projects
-                    </a>
-                  </li>
-                  <li role="none">
-                    <a
-                      href="#contact"
-                      role="menuitem"
-                      className="text-gray-300 hover:text-white transition"
-                    >
-                      Contact
-                    </a>
-                  </li>
-                  <li role="none">
+                <div className="flex items-center gap-1 md:gap-6">
+                  {/* Nav Links */}
+                  <ul className="hidden md:flex items-center gap-6">
+                    {NAV_SECTIONS.map((section) => (
+                      <li key={section.id}>
+                        <a
+                          href={`#${section.id}`}
+                          className="text-gray-300 hover:text-white transition rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+                        >
+                          {section.label}
+                        </a>
+                      </li>
+                    ))}
+                    <li>
+                      <Link
+                        href="/blog"
+                        className="text-gray-300 hover:text-white transition rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+                      >
+                        Blog
+                      </Link>
+                    </li>
+                  </ul>
+
+                  {/* Command palette trigger */}
+                  <button
+                    type="button"
+                    onClick={() => setPaletteOpen(true)}
+                    className="flex items-center gap-2 p-2 md:px-3 md:py-1.5 text-gray-300 hover:text-white md:bg-gray-800/80 md:border md:border-gray-700 md:hover:bg-gray-700 rounded-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+                    aria-label="Search the site"
+                  >
+                    <Icon name="search" className="w-5 h-5 md:w-4 md:h-4" />
+                    <span className="hidden md:inline text-sm">Search</span>
+                    <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 bg-gray-900/60 rounded text-xs font-mono border border-gray-600">
+                      {shortcutLabel}
+                    </kbd>
+                  </button>
+
+                  {/* Mobile menu toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setMobileMenuOpen((isOpen) => !isOpen)}
+                    className="md:hidden p-2 text-gray-300 hover:text-white rounded-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+                    aria-expanded={mobileMenuOpen}
+                    aria-controls="mobile-menu"
+                    aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+                  >
+                    <Icon name={mobileMenuOpen ? "close" : "menu"} className="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Mobile menu */}
+              {mobileMenuOpen && (
+                <ul id="mobile-menu" className="md:hidden border-t border-gray-800 py-2">
+                  {NAV_SECTIONS.map((section) => (
+                    <li key={section.id}>
+                      <a
+                        href={`#${section.id}`}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="block px-2 py-3 text-gray-300 hover:text-white rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+                      >
+                        {section.label}
+                      </a>
+                    </li>
+                  ))}
+                  <li>
                     <Link
                       href="/blog"
-                      role="menuitem"
-                      className="text-gray-300 hover:text-white transition"
+                      className="block px-2 py-3 text-gray-300 hover:text-white rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
                     >
-                      ✍️ Blog
+                      Blog
                     </Link>
                   </li>
                 </ul>
-              </div>
+              )}
             </nav>
           </header>
 
-          {/* ============================================================ */}
-          {/* STICKY 3D LOGO - Animates from hero to bottom-right corner */}
-          {/* ============================================================ */}
-          <div
-            className="fixed z-[999] flex items-center justify-center transition-all duration-200 ease-out rounded-xl"
-            style={{
-              width:
-                scrollProgress < 1 ? `${100 - scrollProgress * 88}%` : "120px",
-              height:
-                scrollProgress < 1 ? `${90 - scrollProgress * 78}%` : "120px",
-              right: isMobile
-                ? scrollProgress < 1
-                  ? "0%"
-                  : "20px"
-                : scrollProgress < 1
-                ? `${-20 + scrollProgress * 22}%`
-                : "20px",
-              left: isMobile && scrollProgress < 1 ? "0%" : "auto",
-              bottom: scrollProgress < 1 ? "auto" : "20px",
-              top: scrollProgress < 1 ? `${5 + scrollProgress * 40}%` : "auto",
-              backgroundColor: "transparent",
-              boxShadow: "none",
-              cursor:
-                scrollProgress >= 1
-                  ? "pointer"
-                  : orbitMode
-                  ? "grab"
-                  : "default",
-              margin: isMobile && scrollProgress < 1 ? "0 auto" : undefined,
-            }}
-            onClick={() => {
-              if (scrollProgress >= 1) {
-                smoothScrollTo("hero", 2500);
-              } else if (!orbitMode) {
-                setOrbitMode(true);
-              }
-            }}
-          >
-            <Logo3DView
-              width={scrollProgress < 1 ? 100 : 6}
-              height={scrollProgress < 1 ? 100 : 6}
-              interactive={!isMobile && orbitMode && scrollProgress < 1}
-              animationType="explosion"
-              materialPreset="brushed_metal"
-              rotationSpeed={1.5}
-            />
-          </div>
+          {/* Back to top (appears with the navbar) */}
+          {showNavbar && (
+            <button
+              type="button"
+              onClick={backToTop}
+              className="fixed bottom-5 right-5 z-50 w-11 h-11 rounded-full bg-gray-800/90 backdrop-blur border border-gray-700 text-gray-300 hover:text-white hover:bg-gray-700 flex items-center justify-center shadow-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+              aria-label="Back to top"
+              title="Back to top"
+            >
+              <Icon name="arrowUp" className="w-5 h-5" />
+            </button>
+          )}
 
           {/* ============================================================ */}
           {/* MAIN CONTENT - Wrapped for accessibility */}
@@ -473,22 +429,27 @@ export default function Home({ githubStats, stackoverflowStats }) {
             {/* ============================================================ */}
             <section
               id="hero"
-              className="relative h-screen flex items-center justify-center bg-gradient-to-br from-gray-950 via-purple-950/20 to-gray-950 overflow-hidden"
+              className="relative h-screen h-svh flex flex-col justify-end lg:block bg-gradient-to-br from-gray-950 via-purple-950/20 to-gray-950 overflow-hidden"
               aria-label="Introduction"
               itemScope
               itemType="https://schema.org/WPHeader"
             >
-              <div className="absolute left-[5%] z-[1001] text-left px-4 max-w-xl">
+              {/* Requirement -> code -> system -> users, told with real projects */}
+              <div className="relative flex-1 min-h-0 pt-4 lg:pt-0 lg:absolute lg:right-0 lg:top-[12%] lg:bottom-[10%] lg:w-1/2 xl:w-[55%] max-lg:[@media(max-height:560px)]:hidden">
+                <MorphingCard projects={user.projects} className="h-full" />
+              </div>
+
+              <div className="relative z-10 mx-[5%] px-4 pt-4 pb-[6vh] lg:absolute lg:mx-0 lg:p-0 lg:px-4 lg:left-[5%] lg:top-1/2 lg:-translate-y-1/2 text-left max-w-xl lg:max-w-md xl:max-w-lg">
                 <p
-                  className="text-lg text-purple-400 mb-2 animate-fade-in-up font-medium"
-                  style={{ animationDelay: "0.1s", animationFillMode: "both" }}
+                  className="text-base sm:text-lg text-purple-400 mb-2 animate-fade-in-up font-medium"
+                  style={{ animationDelay: "0.05s", animationFillMode: "both" }}
                   itemProp="jobTitle"
                 >
                   {user.title}
                 </p>
                 <h1
-                  className="text-5xl md:text-7xl font-bold text-white mb-6 animate-fade-in-up"
-                  style={{ animationDelay: "0.2s", animationFillMode: "both" }}
+                  className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-4 md:mb-6 animate-fade-in-up"
+                  style={{ animationDelay: "0.1s", animationFillMode: "both" }}
                   itemProp="headline"
                 >
                   Hi, I'm
@@ -498,33 +459,33 @@ export default function Home({ githubStats, stackoverflowStats }) {
                   </span>
                 </h1>
                 <p
-                  className="text-xl text-gray-400 mb-8 max-w-2xl animate-fade-in-up"
-                  style={{ animationDelay: "0.5s", animationFillMode: "both" }}
+                  className="text-lg md:text-xl text-gray-400 mb-6 md:mb-8 max-w-2xl animate-fade-in-up"
+                  style={{ animationDelay: "0.2s", animationFillMode: "both" }}
                   itemProp="description"
                 >
                   {user.bio[0]}
                 </p>
                 <nav
-                  className="flex flex-wrap gap-4 justify-start animate-fade-in-up"
-                  style={{ animationDelay: "0.8s", animationFillMode: "both" }}
+                  className="flex flex-wrap gap-3 sm:gap-4 justify-start animate-fade-in-up"
+                  style={{ animationDelay: "0.3s", animationFillMode: "both" }}
                   aria-label="Primary actions"
                 >
                   <button
                     onClick={() => {
-                      smoothScrollTo("projects", 2500);
+                      scrollToSection("projects");
                       trackButtonClick("View Projects", "Hero Section");
                     }}
-                    className="px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-950"
+                    className="px-6 sm:px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-950"
                     aria-label="View my projects"
                   >
                     View Projects
                   </button>
                   <button
                     onClick={() => {
-                      smoothScrollTo("contact", 2500);
+                      scrollToSection("contact");
                       trackButtonClick("Contact Me", "Hero Section");
                     }}
-                    className="px-8 py-3 border border-gray-600 hover:border-gray-500 text-white rounded-lg font-medium transition focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-950"
+                    className="px-6 sm:px-8 py-3 border border-gray-600 hover:border-gray-500 text-white rounded-lg font-medium transition focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-950"
                     aria-label="Contact me"
                   >
                     Contact Me
@@ -568,7 +529,7 @@ export default function Home({ githubStats, stackoverflowStats }) {
                   <article className="order-1 lg:order-2">
                     <h2
                       id="about-heading"
-                      className="text-4xl font-bold text-white mb-6"
+                      className="text-3xl font-bold text-white mb-6"
                     >
                       About Me
                     </h2>
@@ -661,305 +622,6 @@ export default function Home({ githubStats, stackoverflowStats }) {
             </section>
 
             {/* ============================================================ */}
-            {/* SKILLS SECTION */}
-            {/* ============================================================ */}
-            <section
-              id="skills"
-              className="py-20 bg-gray-900"
-              aria-labelledby="skills-heading"
-            >
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <header className="text-center mb-12">
-                  <h2
-                    id="skills-heading"
-                    className="text-3xl font-bold text-white mb-4"
-                  >
-                    Technical Skills
-                  </h2>
-                  <p className="text-gray-400">
-                    Technologies and tools I work with
-                  </p>
-                </header>
-
-                <div
-                  className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
-                  role="list"
-                  aria-label="Skill categories"
-                >
-                  {Object.entries(user.skills).map(
-                    ([category, skills], index) => {
-                      const icons = {
-                        systems: "🏗️",
-                        languages: "💻",
-                        backend: "⚙️",
-                        databases: "🗄️",
-                        cloud: "☁️",
-                        devops: "🔄",
-                        tools: "🛠️",
-                      };
-                      const colors = {
-                        systems: "purple",
-                        languages: "cyan",
-                        backend: "green",
-                        databases: "orange",
-                        cloud: "blue",
-                        devops: "pink",
-                        tools: "yellow",
-                      };
-                      const color = colors[category] || "purple";
-
-                      return (
-                        <article
-                          key={category}
-                          className={`bg-gray-800/50 rounded-2xl p-6 border border-gray-700 hover:border-${color}-500/50 transition`}
-                          role="listitem"
-                          itemScope
-                          itemType="https://schema.org/ItemList"
-                        >
-                          <header className="flex items-center gap-3 mb-4">
-                            <span className="text-2xl" aria-hidden="true">
-                              {icons[category] || "📦"}
-                            </span>
-                            <h3
-                              className="text-lg font-bold text-white capitalize"
-                              itemProp="name"
-                            >
-                              {category}
-                            </h3>
-                          </header>
-                          <ul
-                            className="flex flex-wrap gap-2"
-                            aria-label={`${category} skills`}
-                          >
-                            {skills.map((skill, skillIndex) => (
-                              <li
-                                key={skillIndex}
-                                className="px-3 py-1 bg-gray-700/50 rounded-full text-sm text-gray-300 hover:bg-gray-600/50 transition"
-                                itemProp="itemListElement"
-                              >
-                                {skill}
-                              </li>
-                            ))}
-                          </ul>
-                        </article>
-                      );
-                    }
-                  )}
-                </div>
-              </div>
-            </section>
-
-            {/* ============================================================ */}
-            {/* ACHIEVEMENTS SECTION - GitHub & Stack Overflow */}
-            {/* ============================================================ */}
-            <section
-              id="achievements"
-              className="py-20 bg-gray-950"
-              aria-labelledby="achievements-heading"
-            >
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <header className="text-center mb-12">
-                  <h2
-                    id="achievements-heading"
-                    className="text-3xl font-bold text-white mb-4"
-                  >
-                    Community & Open Source
-                  </h2>
-                  <p className="text-gray-400">
-                    Contributing to the developer community
-                  </p>
-                </header>
-
-                <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                  {/* GitHub Card */}
-                  <a
-                    href={
-                      user.achievements?.github?.profileUrl || user.links.github
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group bg-gray-800/30 rounded-2xl p-6 border border-gray-800 hover:border-purple-500/50 transition block"
-                  >
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="w-14 h-14 bg-gray-900 rounded-xl flex items-center justify-center group-hover:bg-gray-800 transition">
-                        <svg
-                          className="w-8 h-8 text-white"
-                          fill="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-white">GitHub</h3>
-                        <p className="text-gray-500 text-sm">
-                          @{user.achievements?.github?.username || "smitgabani"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center p-3 bg-gray-900/50 rounded-lg">
-                        <div className="text-2xl font-bold text-purple-400">
-                          {user.achievements?.github?.stats?.repositories ||
-                            "30+"}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          Repositories
-                        </div>
-                      </div>
-                      <div className="text-center p-3 bg-gray-900/50 rounded-lg">
-                        <div className="text-2xl font-bold text-green-400">
-                          {user.achievements?.github?.stats?.contributions ||
-                            "500+"}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          Contributions
-                        </div>
-                      </div>
-                      <div className="text-center p-3 bg-gray-900/50 rounded-lg">
-                        <div className="text-2xl font-bold text-yellow-400">
-                          {user.achievements?.github?.stats?.stars || "50+"}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          Stars Earned
-                        </div>
-                      </div>
-                      <div className="text-center p-3 bg-gray-900/50 rounded-lg">
-                        <div className="text-2xl font-bold text-cyan-400">
-                          {user.achievements?.github?.stats?.followers ||
-                            "100+"}
-                        </div>
-                        <div className="text-xs text-gray-500">Followers</div>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 text-purple-400 text-sm font-medium group-hover:text-purple-300 transition flex items-center justify-center gap-1">
-                      View Profile
-                      <svg
-                        className="w-4 h-4 group-hover:translate-x-1 transition-transform"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M14 5l7 7m0 0l-7 7m7-7H3"
-                        />
-                      </svg>
-                    </div>
-                  </a>
-
-                  {/* Stack Overflow Card */}
-                  <a
-                    href={
-                      user.achievements?.stackoverflow?.profileUrl ||
-                      "https://stackoverflow.com"
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group bg-gray-800/30 rounded-2xl p-6 border border-gray-800 hover:border-orange-500/50 transition block"
-                  >
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="w-14 h-14 bg-gray-900 rounded-xl flex items-center justify-center group-hover:bg-gray-800 transition">
-                        <svg
-                          className="w-8 h-8 text-orange-500"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                        >
-                          <path d="M18.986 21.865v-6.404h2.134V24H1.844v-8.539h2.13v6.404h15.012zM6.111 19.731H16.85v-2.137H6.111v2.137zm.259-4.852l10.48 2.189.451-2.07-10.478-2.187-.453 2.068zm1.359-5.056l9.705 4.53.903-1.95-9.706-4.53-.902 1.936v.014zm2.715-4.785l8.217 6.855 1.359-1.62-8.216-6.853-1.35 1.617-.01.001zM15.751 0l-1.746 1.294 6.405 8.604 1.746-1.294L15.749 0h.002z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-white">
-                          Stack Overflow
-                        </h3>
-                        <p className="text-gray-500 text-sm">
-                          Helping developers worldwide
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div className="text-center p-3 bg-gray-900/50 rounded-lg">
-                        <div className="text-2xl font-bold text-orange-400">
-                          {user.achievements?.stackoverflow?.stats
-                            ?.reputation || "1,000+"}
-                        </div>
-                        <div className="text-xs text-gray-500">Reputation</div>
-                      </div>
-                      <div className="text-center p-3 bg-gray-900/50 rounded-lg">
-                        <div className="text-2xl font-bold text-green-400">
-                          {user.achievements?.stackoverflow?.stats?.answers ||
-                            "50+"}
-                        </div>
-                        <div className="text-xs text-gray-500">Answers</div>
-                      </div>
-                    </div>
-
-                    {/* Badges */}
-                    <div className="flex items-center justify-center gap-4 p-3 bg-gray-900/50 rounded-lg mb-4">
-                      <div className="flex items-center gap-1">
-                        <span className="w-4 h-4 rounded-full bg-yellow-500"></span>
-                        <span className="text-sm text-gray-400">
-                          {user.achievements?.stackoverflow?.stats?.badges
-                            ?.gold || 2}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="w-4 h-4 rounded-full bg-gray-400"></span>
-                        <span className="text-sm text-gray-400">
-                          {user.achievements?.stackoverflow?.stats?.badges
-                            ?.silver || 10}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="w-4 h-4 rounded-full bg-amber-700"></span>
-                        <span className="text-sm text-gray-400">
-                          {user.achievements?.stackoverflow?.stats?.badges
-                            ?.bronze || 25}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="text-center p-2 bg-gray-900/30 rounded-lg mb-4">
-                      <div className="text-lg font-semibold text-cyan-400">
-                        {user.achievements?.stackoverflow?.stats?.reached ||
-                          "100K+"}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        People Reached
-                      </div>
-                    </div>
-
-                    <div className="text-orange-400 text-sm font-medium group-hover:text-orange-300 transition flex items-center justify-center gap-1">
-                      View Profile
-                      <svg
-                        className="w-4 h-4 group-hover:translate-x-1 transition-transform"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M14 5l7 7m0 0l-7 7m7-7H3"
-                        />
-                      </svg>
-                    </div>
-                  </a>
-                </div>
-              </div>
-            </section>
-
-            {/* ============================================================ */}
             {/* EXPERIENCE SECTION */}
             {/* ============================================================ */}
             <section
@@ -978,11 +640,7 @@ export default function Home({ githubStats, stackoverflowStats }) {
                   <p className="text-gray-400">My professional journey</p>
                 </header>
 
-                <div
-                  className="max-w-4xl mx-auto space-y-8"
-                  role="feed"
-                  aria-label="Work experience"
-                >
+                <div className="max-w-4xl mx-auto space-y-8">
                   {user.experience.map((exp, index) => (
                     <article
                       key={index}
@@ -1045,7 +703,7 @@ export default function Home({ githubStats, stackoverflowStats }) {
             {/* ============================================================ */}
             <section
               id="projects"
-              className="py-20 bg-gray-900"
+              className="py-20 bg-gray-950"
               aria-labelledby="projects-heading"
             >
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1065,31 +723,31 @@ export default function Home({ githubStats, stackoverflowStats }) {
                   onFilterChange={setFilteredProjects}
                 />
 
-                <div
-                  className="grid md:grid-cols-2 gap-8"
-                  role="feed"
-                  aria-label="Portfolio projects"
-                >
-                  {filteredProjects.map((project, index) => (
+                <div className="grid md:grid-cols-2 gap-8">
+                  {filteredProjects.map((project) => (
                     <article
-                      key={index}
-                      className="bg-gray-800/30 rounded-2xl overflow-hidden border border-gray-800 hover:border-purple-500/50 transition group"
+                      key={project.slug}
+                      className="relative bg-gray-800/30 rounded-2xl overflow-hidden border border-gray-800 hover:border-purple-500/50 transition group"
                       itemScope
                       itemType="https://schema.org/SoftwareSourceCode"
                     >
-                      <Link
-                        href={`/projects/${project.slug}`}
-                        className="block"
-                      >
-                        <header className="h-32 bg-gradient-to-br from-purple-900/30 to-cyan-900/30 flex items-center justify-center p-6 group-hover:from-purple-900/50 group-hover:to-cyan-900/50 transition">
-                          <h3
-                            className="text-2xl font-bold text-white text-center"
-                            itemProp="name"
-                          >
-                            {project.title}
-                          </h3>
-                        </header>
-                      </Link>
+                      <header className="relative h-32 bg-gray-900 flex flex-col items-center justify-center p-6 overflow-hidden">
+                        <div
+                          className={`absolute inset-0 bg-gradient-to-br ${categoryGradient(
+                            project.category
+                          )} opacity-20 group-hover:opacity-30 transition-opacity`}
+                          aria-hidden="true"
+                        />
+                        <p className="relative text-xs font-medium uppercase tracking-wider text-gray-200 mb-2">
+                          {project.category} · {project.year}
+                        </p>
+                        <h3
+                          className="relative text-2xl font-bold text-white text-center"
+                          itemProp="name"
+                        >
+                          {project.title}
+                        </h3>
+                      </header>
                       <div className="p-6">
                         <p
                           className="text-gray-400 text-sm mb-2"
@@ -1104,9 +762,9 @@ export default function Home({ githubStats, stackoverflowStats }) {
                           className="flex flex-wrap gap-2 mb-4"
                           aria-label={`Technologies used in ${project.title}`}
                         >
-                          {project.tech.slice(0, 5).map((tech, techIndex) => (
+                          {project.tech.slice(0, 5).map((tech) => (
                             <li
-                              key={techIndex}
+                              key={tech}
                               className="px-3 py-1 bg-gray-700/50 rounded-full text-xs text-gray-400"
                               itemProp="programmingLanguage"
                             >
@@ -1119,13 +777,11 @@ export default function Home({ githubStats, stackoverflowStats }) {
                             </li>
                           )}
                         </ul>
-                        <nav
-                          className="flex gap-4"
-                          aria-label={`Links for ${project.title}`}
-                        >
+                        <div className="flex gap-4">
+                          {/* Stretched link: the whole card opens the project page */}
                           <Link
                             href={`/projects/${project.slug}`}
-                            className="text-sm text-purple-400 hover:text-purple-300 transition flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-purple-500 rounded"
+                            className="text-sm text-purple-400 hover:text-purple-300 transition flex items-center gap-1 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 after:absolute after:inset-0 after:content-['']"
                             aria-label={`View details for ${project.title}`}
                           >
                             <span>View Details</span>
@@ -1136,7 +792,7 @@ export default function Home({ githubStats, stackoverflowStats }) {
                               href={project.code}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-sm text-cyan-400 hover:text-cyan-300 transition flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-cyan-500 rounded"
+                              className="relative z-10 text-sm text-cyan-400 hover:text-cyan-300 transition flex items-center gap-1 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
                               itemProp="codeRepository"
                               aria-label={`View source code for ${project.title} on GitHub (opens in new tab)`}
                             >
@@ -1144,10 +800,260 @@ export default function Home({ githubStats, stackoverflowStats }) {
                               <span aria-hidden="true">↗</span>
                             </a>
                           )}
-                        </nav>
+                        </div>
                       </div>
                     </article>
                   ))}
+                </div>
+              </div>
+            </section>
+
+            {/* ============================================================ */}
+            {/* SKILLS SECTION */}
+            {/* ============================================================ */}
+            <section
+              id="skills"
+              className="py-20 bg-gray-900"
+              aria-labelledby="skills-heading"
+            >
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <header className="text-center mb-12">
+                  <h2
+                    id="skills-heading"
+                    className="text-3xl font-bold text-white mb-4"
+                  >
+                    Technical Skills
+                  </h2>
+                  <p className="text-gray-400">
+                    Technologies and tools I work with
+                  </p>
+                </header>
+
+                <div
+                  className="skills-grid grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+                  role="list"
+                  aria-label="Skill categories"
+                >
+                  {Object.entries(user.skills).map(
+                    ([category, skills], index) => {
+                      const meta = SKILL_CATEGORIES[category] || {
+                        label: category,
+                        icon: "folder",
+                      };
+                      const accent = SKILL_ACCENTS[index % SKILL_ACCENTS.length];
+
+                      return (
+                        <article
+                          key={category}
+                          className={`bg-gray-800/50 rounded-2xl p-6 border border-gray-700 ${accent.hover} transition`}
+                          role="listitem"
+                          itemScope
+                          itemType="https://schema.org/ItemList"
+                        >
+                          <header className="flex items-center gap-3 mb-4">
+                            <span
+                              className={`w-9 h-9 rounded-lg flex items-center justify-center ${accent.icon}`}
+                            >
+                              <Icon name={meta.icon} className="w-5 h-5" />
+                            </span>
+                            <h3
+                              className="text-lg font-bold text-white"
+                              itemProp="name"
+                            >
+                              {meta.label}
+                            </h3>
+                          </header>
+                          <ul
+                            className="flex flex-wrap gap-2"
+                            aria-label={`${meta.label} skills`}
+                          >
+                            {skills.map((skill) => (
+                              <li
+                                key={skill}
+                                className="px-3 py-1 bg-gray-700/50 rounded-full text-sm text-gray-300"
+                                itemProp="itemListElement"
+                              >
+                                {skill}
+                              </li>
+                            ))}
+                          </ul>
+                        </article>
+                      );
+                    }
+                  )}
+                </div>
+              </div>
+            </section>
+
+            {/* ============================================================ */}
+            {/* ACHIEVEMENTS SECTION - GitHub & Stack Overflow */}
+            {/* ============================================================ */}
+            <section
+              id="achievements"
+              className="py-20 bg-gray-950"
+              aria-labelledby="achievements-heading"
+            >
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <header className="text-center mb-12">
+                  <h2
+                    id="achievements-heading"
+                    className="text-3xl font-bold text-white mb-4"
+                  >
+                    Community & Open Source
+                  </h2>
+                  <p className="text-gray-400">
+                    Contributing to the developer community
+                  </p>
+                </header>
+
+                <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                  {/* GitHub Card */}
+                  <a
+                    href={
+                      user.achievements?.github?.profileUrl || user.links.github
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group bg-gray-800/30 rounded-2xl p-6 border border-gray-800 hover:border-purple-500/50 transition flex flex-col"
+                  >
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-14 h-14 bg-gray-900 rounded-xl flex items-center justify-center group-hover:bg-gray-800 transition">
+                        <svg
+                          className="w-8 h-8 text-white"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white">GitHub</h3>
+                        <p className="text-gray-500 text-sm">
+                          @{user.achievements?.github?.username || "smitgabani"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {githubTiles.length > 0 && (
+                      <dl className="grid grid-cols-2 gap-4 [&>*:last-child:nth-child(odd)]:col-span-2">
+                        {githubTiles.map((tile) => (
+                          <div
+                            key={tile.label}
+                            className="flex flex-col-reverse text-center p-3 bg-gray-900/50 rounded-lg"
+                          >
+                            <dt className="text-xs text-gray-400">{tile.label}</dt>
+                            <dd className="text-2xl font-bold text-purple-400">
+                              {tile.value}
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    )}
+
+                    <div className="mt-auto pt-6 text-purple-400 text-sm font-medium group-hover:text-purple-300 transition flex items-center justify-center gap-1">
+                      View Profile
+                      <svg
+                        className="w-4 h-4 group-hover:translate-x-1 transition-transform"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M14 5l7 7m0 0l-7 7m7-7H3"
+                        />
+                      </svg>
+                    </div>
+                  </a>
+
+                  {/* Stack Overflow Card */}
+                  <a
+                    href={user.achievements.stackoverflow.profileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group bg-gray-800/30 rounded-2xl p-6 border border-gray-800 hover:border-orange-500/50 transition flex flex-col"
+                  >
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-14 h-14 bg-gray-900 rounded-xl flex items-center justify-center group-hover:bg-gray-800 transition">
+                        <svg
+                          className="w-8 h-8 text-orange-500"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                        >
+                          <path d="M18.986 21.865v-6.404h2.134V24H1.844v-8.539h2.13v6.404h15.012zM6.111 19.731H16.85v-2.137H6.111v2.137zm.259-4.852l10.48 2.189.451-2.07-10.478-2.187-.453 2.068zm1.359-5.056l9.705 4.53.903-1.95-9.706-4.53-.902 1.936v.014zm2.715-4.785l8.217 6.855 1.359-1.62-8.216-6.853-1.35 1.617-.01.001zM15.751 0l-1.746 1.294 6.405 8.604 1.746-1.294L15.749 0h.002z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white">
+                          Stack Overflow
+                        </h3>
+                        <p className="text-gray-500 text-sm">
+                          Helping developers worldwide
+                        </p>
+                      </div>
+                    </div>
+
+                    {stackoverflowTiles.length > 0 && (
+                      <dl className="grid grid-cols-2 gap-4 mb-4 [&>*:last-child:nth-child(odd)]:col-span-2">
+                        {stackoverflowTiles.map((tile) => (
+                          <div
+                            key={tile.label}
+                            className="flex flex-col-reverse text-center p-3 bg-gray-900/50 rounded-lg"
+                          >
+                            <dt className="text-xs text-gray-400">{tile.label}</dt>
+                            <dd className="text-2xl font-bold text-orange-400">
+                              {tile.value}
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    )}
+
+                    {stackoverflowBadges.length > 0 && (
+                      <div className="flex items-center justify-center gap-3 p-3 bg-gray-900/50 rounded-lg mb-4">
+                        <span className="text-xs text-gray-400">Badges</span>
+                        <ul className="flex items-center gap-4">
+                          {stackoverflowBadges.map((badge) => (
+                            <li
+                              key={badge.name}
+                              className="flex items-center gap-1.5"
+                              title={`${badge.count} ${badge.name} badges`}
+                            >
+                              <span
+                                className={`w-3 h-3 rounded-full ${badge.color}`}
+                                aria-hidden="true"
+                              ></span>
+                              <span className="text-sm text-gray-300">{badge.count}</span>
+                              <span className="sr-only"> {badge.name} badges</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    <div className="mt-auto pt-6 text-orange-400 text-sm font-medium group-hover:text-orange-300 transition flex items-center justify-center gap-1">
+                      View Profile
+                      <svg
+                        className="w-4 h-4 group-hover:translate-x-1 transition-transform"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M14 5l7 7m0 0l-7 7m7-7H3"
+                        />
+                      </svg>
+                    </div>
+                  </a>
                 </div>
               </div>
             </section>
@@ -1186,7 +1092,7 @@ export default function Home({ githubStats, stackoverflowStats }) {
                         Email Me →
                       </a>
                       <a
-                        href={user.resume_link}
+                        href={resumeHref}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => trackDownload("resume.pdf")}
@@ -1200,26 +1106,26 @@ export default function Home({ githubStats, stackoverflowStats }) {
 
                     {/* Quick Contact Info */}
                     <div className="space-y-3 text-gray-400">
-                      <p className="flex items-center gap-2">
-                        <span aria-hidden="true">📧</span>
+                      <p className="flex items-center gap-3">
+                        <Icon name="mail" className="w-5 h-5 text-purple-400 flex-shrink-0" />
                         <a
                           href={user.links.email}
-                          className="hover:text-white transition"
+                          className="hover:text-white transition rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
                         >
                           {user.email}
                         </a>
                       </p>
-                      <p className="flex items-center gap-2">
-                        <span aria-hidden="true">📱</span>
+                      <p className="flex items-center gap-3">
+                        <Icon name="phone" className="w-5 h-5 text-purple-400 flex-shrink-0" />
                         <a
                           href={`tel:${user.phone.replace(/[^0-9+]/g, "")}`}
-                          className="hover:text-white transition"
+                          className="hover:text-white transition rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
                         >
                           {user.phone}
                         </a>
                       </p>
-                      <p className="flex items-center gap-2">
-                        <span aria-hidden="true">📍</span>
+                      <p className="flex items-center gap-3">
+                        <Icon name="location" className="w-5 h-5 text-purple-400 flex-shrink-0" />
                         <span>{user.location}, Canada</span>
                       </p>
                     </div>
@@ -1228,7 +1134,7 @@ export default function Home({ githubStats, stackoverflowStats }) {
                   {/* Right - Contact Form */}
                   <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-800">
                     <h3 className="text-xl font-bold text-white mb-2">
-                      Drop me a line ✨
+                      Drop me a line
                     </h3>
                     <p className="text-gray-500 text-sm mb-6">
                       No formal stuff here — just real talk.
@@ -1290,59 +1196,29 @@ export default function Home({ githubStats, stackoverflowStats }) {
                 <nav aria-label="Footer navigation">
                   <h3 className="text-white font-semibold mb-4">Navigation</h3>
                   <ul className="space-y-2 text-gray-400 text-sm">
+                    {NAV_SECTIONS.map((section) => (
+                      <li key={section.id}>
+                        <a
+                          href={`#${section.id}`}
+                          className="hover:text-white transition rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:text-white"
+                        >
+                          {section.label}
+                        </a>
+                      </li>
+                    ))}
                     <li>
-                      <a
-                        href="#hero"
-                        className="hover:text-white transition focus:outline-none focus:text-white"
-                      >
-                        Home
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#about"
-                        className="hover:text-white transition focus:outline-none focus:text-white"
-                      >
-                        About
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#skills"
-                        className="hover:text-white transition focus:outline-none focus:text-white"
-                      >
-                        Skills
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#experience"
-                        className="hover:text-white transition focus:outline-none focus:text-white"
-                      >
-                        Experience
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#projects"
-                        className="hover:text-white transition focus:outline-none focus:text-white"
-                      >
-                        Projects
-                      </a>
-                    </li>
-                    <li className="pt-2">
                       <Link
                         href="/blog"
-                        className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30 text-purple-400 rounded-full text-sm hover:from-purple-500/30 hover:to-cyan-500/30 hover:text-purple-300 transition focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="hover:text-white transition rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:text-white"
                       >
-                        ✍️ Blog
+                        Blog
                       </Link>
                     </li>
                   </ul>
                 </nav>
 
-                {/* Social Links */}
-                <nav aria-label="Social media links">
+                {/* Social + contact links */}
+                <nav aria-label="Social and contact links" className="md:col-span-2">
                   <h3 className="text-white font-semibold mb-4">Connect</h3>
                   <ul className="space-y-2 text-gray-400 text-sm">
                     <li>
@@ -1350,7 +1226,7 @@ export default function Home({ githubStats, stackoverflowStats }) {
                         href={user.links.github}
                         target="_blank"
                         rel="noopener noreferrer me"
-                        className="hover:text-white transition focus:outline-none focus:text-white"
+                        className="hover:text-white transition rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:text-white"
                         aria-label="Visit my GitHub profile (opens in new tab)"
                       >
                         GitHub
@@ -1361,7 +1237,7 @@ export default function Home({ githubStats, stackoverflowStats }) {
                         href={user.links.linkedin}
                         target="_blank"
                         rel="noopener noreferrer me"
-                        className="hover:text-white transition focus:outline-none focus:text-white"
+                        className="hover:text-white transition rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:text-white"
                         aria-label="Connect with me on LinkedIn (opens in new tab)"
                       >
                         LinkedIn
@@ -1372,51 +1248,34 @@ export default function Home({ githubStats, stackoverflowStats }) {
                         href={user.links.twitter}
                         target="_blank"
                         rel="noopener noreferrer me"
-                        className="hover:text-white transition focus:outline-none focus:text-white"
+                        className="hover:text-white transition rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:text-white"
                         aria-label="Follow me on Twitter (opens in new tab)"
                       >
                         Twitter
                       </a>
                     </li>
-                  </ul>
-                </nav>
-
-                {/* Contact Info */}
-                <address className="not-italic">
-                  <h3 className="text-white font-semibold mb-4">Contact</h3>
-                  <ul className="space-y-2 text-gray-400 text-sm">
                     <li>
                       <a
                         href={user.links.email}
-                        className="hover:text-white transition focus:outline-none focus:text-white"
-                        aria-label={`Send email to ${user.email}`}
+                        className="hover:text-white transition rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:text-white"
                       >
-                        {user.email}
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href={`tel:${user.phone.replace(/[^0-9+]/g, "")}`}
-                        className="hover:text-white transition focus:outline-none focus:text-white"
-                        aria-label={`Call ${user.phone}`}
-                      >
-                        {user.phone}
+                        {email}
                       </a>
                     </li>
                     <li className="pt-2">
                       <a
-                        href={user.resume_link}
+                        href={resumeHref}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-purple-400 hover:text-purple-300 transition focus:outline-none focus:text-purple-300"
+                        onClick={() => trackDownload("resume.pdf")}
+                        className="text-purple-400 hover:text-purple-300 transition rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
                         aria-label="Download my resume as PDF (opens in new tab)"
-                        download
                       >
                         Download Resume →
                       </a>
                     </li>
                   </ul>
-                </address>
+                </nav>
               </div>
 
               {/* Bottom */}
@@ -1427,8 +1286,7 @@ export default function Home({ githubStats, stackoverflowStats }) {
                     <time dateTime={new Date().getFullYear().toString()}>
                       {new Date().getFullYear()}
                     </time>{" "}
-                    {user.name}. All rights reserved. Portfolio designed and
-                    built by {user.name}.
+                    {user.name}. All rights reserved.
                   </small>
                 </p>
                 <p className="text-gray-600 text-xs">
@@ -1443,7 +1301,7 @@ export default function Home({ githubStats, stackoverflowStats }) {
             </div>
           </footer>
         </div>
-      </Logo3DProvider>
+      </>
     </>
   );
 }
@@ -1451,32 +1309,27 @@ export default function Home({ githubStats, stackoverflowStats }) {
 // Fetch live GitHub and StackOverflow stats at build time
 export async function getStaticProps() {
   const { fetchGitHubStats, formatStat: formatGitHubStat } = await import('../lib/api/github');
-  const { fetchStackOverflowStats, formatStat: formatStackOverflowStat, formatReach } = await import('../lib/api/stackoverflow');
+  const { fetchStackOverflowStats, formatStat: formatStackOverflowStat } = await import('../lib/api/stackoverflow');
 
   try {
-    // Fetch GitHub stats
-    const githubData = await fetchGitHubStats('smitgabani');
+    // Each fetcher returns null if its API is unreachable
+    const [githubData, stackoverflowData] = await Promise.all([
+      fetchGitHubStats('smitgabani'),
+      fetchStackOverflowStats('19144656'),
+    ]);
 
-    // Fetch StackOverflow stats
-    const stackoverflowData = await fetchStackOverflowStats('19144656');
-
-    // Format stats for display
-    const githubStats = {
+    // Format stats for display; unknown values stay null and are hidden
+    const githubStats = githubData && {
       repositories: formatGitHubStat(githubData.repositories),
       contributions: formatGitHubStat(githubData.contributions),
       stars: formatGitHubStat(githubData.stars),
       followers: formatGitHubStat(githubData.followers),
     };
 
-    const stackoverflowStats = {
+    const stackoverflowStats = stackoverflowData && {
       reputation: formatStackOverflowStat(stackoverflowData.reputation),
       answers: formatStackOverflowStat(stackoverflowData.answers),
-      reached: formatReach(stackoverflowData.reached),
-      badges: {
-        gold: stackoverflowData.badges.gold,
-        silver: stackoverflowData.badges.silver,
-        bronze: stackoverflowData.badges.bronze,
-      },
+      badges: stackoverflowData.badges,
     };
 
     return {
@@ -1490,7 +1343,7 @@ export async function getStaticProps() {
   } catch (error) {
     console.error('Error fetching stats in getStaticProps:', error);
 
-    // Return null props to use fallback data from user.json
+    // The page hides stats it doesn't have
     return {
       props: {
         githubStats: null,

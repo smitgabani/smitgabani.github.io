@@ -41,13 +41,20 @@ export async function getStaticProps() {
       // Extract thumbnail from content
       const imgMatch = content.match(/<img[^>]+src="([^"]+)"/)
       const thumbnail = imgMatch ? imgMatch[1] : null
-      
+
+      // Posts in publications only include a teaser ending in "Continue reading on …"
+      const fullText = stripHtml(content)
+      const isTeaser = /Continue reading on /i.test(fullText)
+      const text = fullText.replace(/\s*Continue reading on [\s\S]*$/i, '').trim()
+
       return {
-        title,
+        title: decodeEntities(title),
         link,
         pubDate,
         thumbnail,
-        description: stripHtml(content).substring(0, 200) + '...',
+        description: truncate(text, 200),
+        // Read time is only meaningful when the feed has the whole article
+        readTime: isTeaser ? null : getReadTime(fullText),
         categories,
         author: MEDIUM_USERNAME
       }
@@ -72,9 +79,32 @@ export async function getStaticProps() {
   }
 }
 
-// Helper function to strip HTML tags
+// Decode the HTML entities Medium leaves in feed text (e.g. &#x2019; -> ’)
+const NAMED_ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' }
+
+function decodeEntities(text) {
+  return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, code) => {
+    if (code[0] === '#') {
+      const isHex = code[1].toLowerCase() === 'x'
+      const num = parseInt(code.slice(isHex ? 2 : 1), isHex ? 16 : 10)
+      return Number.isNaN(num) ? match : String.fromCodePoint(num)
+    }
+    return NAMED_ENTITIES[code.toLowerCase()] ?? match
+  })
+}
+
+// Helper function to strip HTML tags and decode entities
 function stripHtml(html) {
-  return html ? html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim() : ''
+  if (!html) return ''
+  const text = html.replace(/<[^>]*>/g, ' ')
+  return decodeEntities(text).replace(/\s+/g, ' ').trim()
+}
+
+// Shorten text at a word boundary
+function truncate(text, max) {
+  if (text.length <= max) return text
+  const cut = text.lastIndexOf(' ', max)
+  return text.slice(0, cut > 0 ? cut : max).replace(/[\s,.;:]+$/, '') + '…'
 }
 
 // Helper function to extract first image from content
@@ -95,8 +125,8 @@ function formatDate(dateString) {
 }
 
 // Calculate read time (rough estimate)
-function getReadTime(description) {
-  const words = description.split(' ').length
+function getReadTime(text) {
+  const words = text.split(' ').length
   const minutes = Math.ceil(words / 200)
   return `${minutes} min read`
 }
@@ -202,7 +232,7 @@ export default function Blog({ posts, totalPosts, mediumUsername, user }) {
         <header className="pt-32 pb-16 bg-gradient-to-br from-gray-950 via-purple-950/20 to-gray-950">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-              ✍️ <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">Blog</span>
+              <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">Blog</span>
             </h1>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
               Thoughts on cloud architecture, systems design, DevOps practices, and lessons learned building scalable infrastructure.
@@ -229,15 +259,19 @@ export default function Blog({ posts, totalPosts, mediumUsername, user }) {
                       {/* Content */}
                       <div className="flex-1 p-6">
                         {/* Meta top row */}
-                        <div className="flex items-center gap-3 mb-3 text-xs text-gray-500">
+                        <div className="flex items-center gap-3 mb-3 text-xs text-gray-400">
                           <span>{formatDate(post.pubDate)}</span>
-                          <span>•</span>
-                          <span className="flex items-center gap-1">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            {getReadTime(post.description)}
-                          </span>
+                          {post.readTime && (
+                            <>
+                              <span aria-hidden="true">•</span>
+                              <span className="flex items-center gap-1">
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                {post.readTime}
+                              </span>
+                            </>
+                          )}
                         </div>
                         
                         {/* Title */}
@@ -246,9 +280,11 @@ export default function Blog({ posts, totalPosts, mediumUsername, user }) {
                         </h2>
                         
                         {/* Description */}
-                        <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-                          {post.description}
-                        </p>
+                        {post.description && (
+                          <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                            {post.description}
+                          </p>
+                        )}
                         
                         {/* Categories */}
                         {post.categories.length > 0 && (

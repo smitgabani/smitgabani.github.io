@@ -76,7 +76,35 @@
       "category": "Cloud & DevOps",
       "code": "https://github.com/smitgabani/fragments",
       "live": "",
-      "year": "2023"
+      "year": "2023",
+      "story": {
+        "client": "Automotive manufacturer",
+        "request": "Our factory devices and workers need one place to upload text and image fragments, and read them back in any format.",
+        "keyword": "upload",
+        "requirements": ["Upload text & images", "Format conversion", "Owner-only access"],
+        "file": "src/routes/fragments.js",
+        "code": [
+          { "line": "router.use(authenticate());", "req": 3 },
+          { "line": "router.post('/fragments', upload);", "req": 1 },
+          { "line": "router.get('/fragments/:id.:ext', convert);", "req": 2 },
+          { "line": "async function upload(req, res) {" },
+          { "line": "  await Fragment.save(req.user, req.body);" },
+          { "line": "  res.status(201).json({ status: 'ok' });" },
+          { "line": "}" }
+        ],
+        "action": "POST /fragments",
+        "button": "Upload",
+        "nodes": [
+          { "label": "Fragments API", "sub": "Express on ECS" },
+          { "label": "Amazon S3", "sub": "Fragment data" },
+          { "label": "DynamoDB", "sub": "Metadata" }
+        ],
+        "users": [
+          { "label": "IoT sensors", "icon": "chip" },
+          { "label": "Worker app", "icon": "mobile" },
+          { "label": "Line cameras", "icon": "camera" }
+        ]
+      }
     },
     {
       "slug": "silkgenerator",
@@ -102,7 +130,36 @@
       "category": "Developer Tools",
       "code": "https://github.com/smitgabani/silkgenerator",
       "live": "",
-      "year": "2023"
+      "year": "2023",
+      "story": {
+        "client": "Docs & content team",
+        "request": "We write everything in Markdown. We want one command to build it into a fast, SEO-friendly website.",
+        "keyword": "build",
+        "requirements": ["Markdown to HTML", "Custom templates", "Plugins & sitemap"],
+        "file": "bin/silk.js",
+        "code": [
+          { "line": "cli.command('build <dir>', build);" },
+          { "line": "async function build(dir) {" },
+          { "line": "  const html = await markdown.render(dir);", "req": 1 },
+          { "line": "  const pages = theme.apply(html);", "req": 2 },
+          { "line": "  await plugins.run(pages); // + sitemap", "req": 3 },
+          { "line": "  await writeSite('dist/', pages);" },
+          { "line": "}" }
+        ],
+        "action": "$ silk build ./docs",
+        "button": "Build",
+        "nodes": [
+          { "label": "Silk CLI", "sub": "Node.js" },
+          { "label": "Markdown", "sub": "Parser + highlight" },
+          { "label": "Templates", "sub": "Themes" },
+          { "label": "Static site", "sub": "HTML + sitemap" }
+        ],
+        "users": [
+          { "label": "Writers", "icon": "document" },
+          { "label": "Developers", "icon": "terminal" },
+          { "label": "Readers", "icon": "desktop" }
+        ]
+      }
     },
     {
       "slug": "mylibrary",
@@ -128,7 +185,35 @@
       "category": "Full-Stack",
       "code": "https://github.com/smitgabani/myLibrary",
       "live": "",
-      "year": "2022"
+      "year": "2022",
+      "story": {
+        "client": "City library",
+        "request": "Members should search and borrow books online, and get a reminder before anything is overdue.",
+        "keyword": "reminder",
+        "requirements": ["Search the catalog", "Borrow & return", "Due-date reminders"],
+        "file": "server/app.js",
+        "code": [
+          { "line": "app.get('/books', searchCatalog);", "req": 1 },
+          { "line": "app.post('/loans', auth, borrowBook);", "req": 2 },
+          { "line": "cron('0 8 * * *', async () => {" },
+          { "line": "  const due = await Loans.dueTomorrow();" },
+          { "line": "  await mailer.sendReminders(due);", "req": 3 },
+          { "line": "});" }
+        ],
+        "action": "cron · daily 08:00",
+        "button": "Reminder sent",
+        "nodes": [
+          { "label": "Library API", "sub": "Express" },
+          { "label": "PostgreSQL", "sub": "Books & loans" },
+          { "label": "MongoDB", "sub": "Members" },
+          { "label": "Nodemailer", "sub": "Scheduled emails" }
+        ],
+        "users": [
+          { "label": "Members", "icon": "user" },
+          { "label": "Librarians", "icon": "users" },
+          { "label": "Email inbox", "icon": "mail" }
+        ]
+      }
     },
     {
       "slug": "mystore",
@@ -154,7 +239,35 @@
       "category": "Backend",
       "code": "https://github.com/smitgabani/myStore",
       "live": "",
-      "year": "2022"
+      "year": "2022",
+      "story": {
+        "client": "Online retailer",
+        "request": "Shoppers need a secure sign-in, a cart that remembers them, and a smooth checkout.",
+        "keyword": "checkout",
+        "requirements": ["Secure sign-in", "Persistent cart", "Order processing"],
+        "file": "routes/store.js",
+        "code": [
+          { "line": "router.post('/auth/login', login);", "req": 1 },
+          { "line": "router.put('/cart', auth, saveCart);", "req": 2 },
+          { "line": "router.post('/checkout', auth, checkout);", "req": 3 },
+          { "line": "async function checkout(req, res) {" },
+          { "line": "  const order = await Order.place(req.cart);" },
+          { "line": "  res.status(201).json(order);" },
+          { "line": "}" }
+        ],
+        "action": "POST /checkout",
+        "button": "Checkout",
+        "nodes": [
+          { "label": "Store API", "sub": "Express" },
+          { "label": "Auth", "sub": "JWT + bcrypt" },
+          { "label": "MongoDB", "sub": "Mongoose" }
+        ],
+        "users": [
+          { "label": "Shoppers", "icon": "cart" },
+          { "label": "Mobile app", "icon": "mobile" },
+          { "label": "Admins", "icon": "cog" }
+        ]
+      }
     }
   ],
   "education": [
@@ -180,27 +293,11 @@
   "achievements": {
     "github": {
       "username": "smitgabani",
-      "profileUrl": "https://github.com/smitgabani",
-      "stats": {
-        "repositories": "30+",
-        "contributions": "500+",
-        "stars": "50+",
-        "followers": "100+"
-      }
+      "profileUrl": "https://github.com/smitgabani"
     },
     "stackoverflow": {
       "userId": "19144656",
-      "profileUrl": "https://stackoverflow.com/users/19144656/smit-gabani",
-      "stats": {
-        "reputation": "500+",
-        "answers": "30+",
-        "reached": "50K+",
-        "badges": {
-          "gold": 0,
-          "silver": 5,
-          "bronze": 15
-        }
-      }
+      "profileUrl": "https://stackoverflow.com/users/19144656/smit-gabani"
     }
   }
 }
