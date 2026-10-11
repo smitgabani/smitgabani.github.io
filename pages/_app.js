@@ -1,18 +1,9 @@
 import Head from "next/head";
-import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import "../styles/globals.css";
 import Analytics from "../components/Analytics";
-import { registerServiceWorker } from "../lib/utils/serviceWorker";
 
 function MyApp({ Component, pageProps }) {
-  // Register service worker on mount
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'production') {
-      registerServiceWorker();
-    }
-  }, []);
-
   return (
     <>
       <Head>
